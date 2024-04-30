@@ -2,7 +2,6 @@ import { render, RenderPosition } from '../render.js';
 import SortingView from '../view/sorting-view.js';
 import FilterView from '../view/filter-view.js';
 import TripEventsView from '../view/trip-events-view.js';
-import AddFormView from '../view/add-form-view.js';
 import EditFormView from '../view/edit-form-view.js';
 
 export default class GeneralPresenter {
@@ -29,19 +28,14 @@ export default class GeneralPresenter {
     }
   }
 
-  renderAddForm() {
-    render(new AddFormView(), this.wayPointList);
-  }
-
   renderEditForm() {
-    render(new EditFormView(), this.wayPointList);
+    render(new EditFormView(), this.wayPointList, RenderPosition.AFTERBEGIN);
   }
 
   init() {
     this.renderFilter();
     this.renderSorting();
     this.renderTripEvents();
-    this.renderAddForm();
     this.renderEditForm();
   }
 }
