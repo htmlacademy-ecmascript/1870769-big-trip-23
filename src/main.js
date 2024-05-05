@@ -1,4 +1,7 @@
-import GeneralPresenter from './presenter/presenter.js';
+import Presenter from './presenter/presenter.js';
+import { TripEventModel } from './model/trip-event-model.js';
 
-const generalPresenter = new GeneralPresenter();
+const tripEventsModel = new TripEventModel();
+
+const generalPresenter = new Presenter({ tripEventsModel });
 generalPresenter.init();
