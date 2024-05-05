@@ -1,59 +1,31 @@
-import { getDateWithRandomTime, getRandomArrayElement, getId, getRandomBoolean, getRandomDate } from '../utils.js';
-import { TRIP_EVENT_TYPE, DateFormats } from '../const.js';
-import { tripOffer } from './trip-offer-mock.js';
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration.js';
-
-const CITIES = ['Barcelona', 'Kyoto', 'Cape Town', 'Sydney', 'Venice', 'Rio de Janeiro', 'Dubai', 'Prague'];
-
-dayjs.extend(duration);
-
-const formatDuration = (stopDuration) => {
-  const days = stopDuration.days();
-  const hours = stopDuration.hours();
-  const minutes = stopDuration.minutes();
-
-  if (days > 0) {
-    return `${days}D ${hours}H ${minutes}M`;
-  } else if (hours > 0) {
-    return `${hours}H ${minutes}M`;
-  } else {
-    return `${minutes}M`;
-  }
-};
+import { getDateWithRandomTime, getRandomArrayElement, getId, getRandomBoolean } from '../utils.js';
+import { TRIP_EVENT_TYPE } from '../const.js';
+import { getRandomInt } from '../utils.js';
+import { offers } from './trip-offers-mock.js';
+import { destionations } from './trip-destinations-mock.js';
 
 const createTripEventsMock = () => {
-  const {TIME, DATE_MONTH} = DateFormats;
-
-  const timeStart = getDateWithRandomTime();
-  const timeEnd = getDateWithRandomTime(timeStart);
-  const type = getRandomArrayElement(TRIP_EVENT_TYPE);
-  const offers = tripOffer();
-
-  const randomDate = getRandomDate();
-  const eventDate = dayjs(randomDate).format(DATE_MONTH);
-  const dateFrom = dayjs(timeStart).format(TIME);
-  const dateTo = dayjs(timeEnd).format(TIME);
-  const eventDuration = dayjs.duration(dayjs(timeEnd).diff(dayjs(timeStart)));
-  const durationString = formatDuration(eventDuration);
+  const dateFrom = getDateWithRandomTime();
+  const dateTo = getDateWithRandomTime(dateFrom);
 
   return {
     id: getId(),
-    eventDate: eventDate,
-    type: type,
-    eventTitle: {
-      destination: type,
-      eventCity: getRandomArrayElement(CITIES)
-    },
-    eventSchedule: {
-      dateFrom: dateFrom,
-      dateTo: dateTo,
-      eventDuration: durationString,
-    },
-    offers: offers,
-    basePrice: offers.offerPrice,
-    isFavorite: getRandomBoolean(),
+    // eslint-disable-next-line camelcase
+    base_price: getRandomInt(1500),
+    // eslint-disable-next-line camelcase
+    date_from: dateFrom,
+    // eslint-disable-next-line camelcase
+    date_to: dateTo,
+    destination: getRandomArrayElement(destionations).id,
+    // eslint-disable-next-line camelcase
+    is_favorite: getRandomBoolean(),
+    offers: [
+      getRandomArrayElement(offers).id,
+    ],
+    type: getRandomArrayElement(TRIP_EVENT_TYPE)
   };
 };
 
-export { createTripEventsMock };
+const tripEvents = new Array(3).fill(null).map(createTripEventsMock);
+
+export { tripEvents };
