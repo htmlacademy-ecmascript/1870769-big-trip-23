@@ -70,7 +70,7 @@ export class TripEventModel {
   }
 
   // TODO: заменить на запрос к серверу
-  fetchDestinations(){
+  fetchDestinations() {
     return destionations;
   }
 }
