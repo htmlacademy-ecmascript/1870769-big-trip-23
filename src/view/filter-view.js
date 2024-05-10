@@ -1,27 +1,23 @@
 import AbstractView from '../framework/view/abstract-view.js';
 
-const createFilterTemplate = () =>
-  `<form class="trip-filters" action="#" method="get">
-    <div class="trip-filters__filter">
-      <input id="filter-everything" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="everything" checked disabled>
-      <label class="trip-filters__filter-label" for="filter-everything">Everything</label>
-    </div>
+const FILTER_TYPES = ['Everything', 'Future', 'Present', 'Past'];
 
-    <div class="trip-filters__filter">
-      <input id="filter-future" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="future" disabled>
-      <label class="trip-filters__filter-label" for="filter-future">Future</label>
-    </div>
+const createFilterItemTemplate = (type, isFirst) => `
+  <div class="trip-filters__filter">
+    <input
+    id="filter-${type.toLowerCase()}"
+    class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter"
+    value="${type.toLowerCase()}" ${isFirst ? 'checked' : ''} disabled>
 
-    <div class="trip-filters__filter">
-      <input id="filter-present" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="present" disabled>
-      <label class="trip-filters__filter-label" for="filter-present">Present</label>
-    </div>
+    <label class="trip-filters__filter-label" for="filter-${type.toLowerCase()}">${type}</label>
+  </div>
+`;
 
-    <div class="trip-filters__filter">
-      <input id="filter-past" class="trip-filters__filter-input  visually-hidden" type="radio" name="trip-filter" value="past" disabled>
-      <label class="trip-filters__filter-label" for="filter-past">Past</label>
-    </div>
-  </form>`;
+const createFilterTemplate = () => `
+  <form class="trip-filters" action="#" method="get">
+    ${FILTER_TYPES.map((type, index) => createFilterItemTemplate(type, index === 0)).join('')}
+  </form>
+`;
 
 export default class FilterView extends AbstractView {
   get template() {
