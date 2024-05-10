@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 /*
 заметка для оптимизации на будущее
@@ -44,20 +44,8 @@ const createSortingTeamplate = () =>
     </div>
   </form>`;
 
-export default class SortingView {
-  getTemplate() {
+export default class SortingView extends AbstractView{
+  get template() {
     return createSortingTeamplate();
-  }
-
-  getElement() {
-    if(!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }
