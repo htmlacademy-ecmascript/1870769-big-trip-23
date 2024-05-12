@@ -138,7 +138,42 @@ const createEditFormView = () =>
 </li>`;
 
 export default class EditFormView extends AbstractView {
+  #closeForm = null;
+  #submitForm = null;
+  #eventRollupBtnElement = null;
+  #eventResetBtnElement = null;
+
+  constructor({ onClickCloseEditFiorm, onSubmitEditForm }) {
+    super();
+    this.#closeForm = onClickCloseEditFiorm;
+    this.#submitForm = onSubmitEditForm;
+
+    this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
+    this.#eventResetBtnElement = this.element.querySelector('.event__reset-btn');
+
+    this.element.addEventListener('submit', this.#onSubmitHandler);
+    this.#eventRollupBtnElement.addEventListener('click', this.#onCloseHandler);
+    this.#eventResetBtnElement.addEventListener('click', this.#onCloseHandler);
+  }
+
   get template() {
     return createEditFormView();
   }
+
+  removeElement() {
+    super.removeElement();
+    this.element.removeEventListener('submit', this.#onSubmitHandler);
+    this.#eventRollupBtnElement.removeEventListener('click', this.#onCloseHandler);
+    this.#eventResetBtnElement.removeEventListener('click', this.#onCloseHandler);
+  }
+
+  #onCloseHandler = (evt) => {
+    evt.preventDefault();
+    this.#closeForm();
+  };
+
+  #onSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.#closeForm();
+  };
 }

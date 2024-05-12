@@ -1,4 +1,4 @@
-import { render, RenderPosition } from '../framework/render.js';
+import { render, RenderPosition, replace } from '../framework/render.js';
 import SortingView from '../view/sorting-view.js';
 import FilterView from '../view/filter-view.js';
 import TripEventsView from '../view/trip-events-view.js';
@@ -9,9 +9,9 @@ export default class Presenter {
     this.tripFilterElement = document.querySelector('.trip-controls__filters');
     this.tripEventsElement = document.querySelector('.trip-events');
 
-    this.wayPointList = document.createElement('ul');
-    this.wayPointList.classList.add('trip-events__list');
-    this.tripEventsElement.appendChild(this.wayPointList);
+    this.tripEventsListElement = document.createElement('ul');
+    this.tripEventsListElement.classList.add('trip-events__list');
+    this.tripEventsElement.appendChild(this.tripEventsListElement);
 
     this.tripEventsModel = tripEventsModel;
   }
@@ -25,19 +25,54 @@ export default class Presenter {
   }
 
   renderTripEvents() {
-    this.tripEventsModel.tripEvents.forEach((tripEvent) => {
-      render(new TripEventsView({ tripEvent }), this.tripEventsElement);
-    });
+    this.#renderTripEvents(this.tripEventsModel);
   }
 
-  renderEditForm() {
-    render(new EditFormView(), this.wayPointList, RenderPosition.AFTERBEGIN);
-  }
+  // renderEditForm() {
+  //   render(new EditFormView(), this.wayPointList, RenderPosition.AFTERBEGIN);
+  // }
 
   init() {
     this.renderFilter();
     this.renderSorting();
     this.renderTripEvents();
-    this.renderEditForm();
+    // this.renderEditForm();
+  }
+
+  #renderTripEvents({ tripEvents }) {
+    tripEvents.forEach((tripEvent) => {
+      this.#renderTripEvent(tripEvent);
+    });
+  }
+
+  #renderTripEvent(tripEvent) {
+    const onClickOpenEditForm = () => switchToEditFode();
+    const onSubmitEditForm = () => switchToViewMode();
+    const onClickCloseEditFiorm = () => switchToViewMode();
+
+    const onEscKeydown = (evt) => {
+      if (evt.key === 'Escape') {
+        evt.preventDefault();
+        switchToViewMode();
+      }
+    };
+
+    const tripEventView = new TripEventsView({ tripEvent, onOpenEdit: onClickOpenEditForm });
+    const tripEditFormComponent = new EditFormView({
+      onSubmitEditForm: onSubmitEditForm,
+      onClickCloseEditFiorm: onClickCloseEditFiorm
+    });
+
+    function switchToEditFode() {
+      replace(tripEditFormComponent, tripEventView);
+      document.addEventListener('keydown', onEscKeydown);
+    }
+
+    function switchToViewMode() {
+      replace(tripEventView, tripEditFormComponent);
+      document.removeEventListener('keydown', onEscKeydown);
+    }
+
+    render(tripEventView, this.tripEventsElement);
   }
 }
