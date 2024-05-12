@@ -68,6 +68,11 @@ export default class TripEventsView extends AbstractView {
     return createTripEventsView(this.tripEvent);
   }
 
+  removeElement() {
+    super.removeElement();
+    this.#eventRollupBtnElement.removeEventListener('click', this.#onClick);
+  }
+
   #onClick = (evt) => {
     evt.preventDefault();
     this.#clickHandler();
