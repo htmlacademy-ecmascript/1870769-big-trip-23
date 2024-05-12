@@ -46,9 +46,9 @@ export default class Presenter {
   }
 
   #renderTripEvent(tripEvent) {
-    const onClickOpenEditForm = () => switchToEditFode();
+    const onClickOpenEditForm = () => switchToEditForm();
     const onSubmitEditForm = () => switchToViewMode();
-    const onClickCloseEditFiorm = () => switchToViewMode();
+    const onClickCloseEditForm = () => switchToViewMode();
 
     const onEscKeydown = (evt) => {
       if (evt.key === 'Escape') {
@@ -60,10 +60,10 @@ export default class Presenter {
     const tripEventView = new TripEventsView({ tripEvent, onOpenEdit: onClickOpenEditForm });
     const tripEditFormComponent = new EditFormView({
       onSubmitEditForm: onSubmitEditForm,
-      onClickCloseEditFiorm: onClickCloseEditFiorm
+      onClickCloseEditFiorm: onClickCloseEditForm
     });
 
-    function switchToEditFode() {
+    function switchToEditForm() {
       replace(tripEditFormComponent, tripEventView);
       document.addEventListener('keydown', onEscKeydown);
     }
