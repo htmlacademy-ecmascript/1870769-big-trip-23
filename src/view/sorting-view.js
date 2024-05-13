@@ -1,63 +1,24 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
-/*
-заметка для оптимизации на будущее
+const SORT_TYPES = ['Day', 'Event', 'Time', 'Price', 'Offers'];
 
- const SORT_TYPES = ['Day', 'Event', 'Time', 'Price', 'Offers'];
- const createSortingItemTeamplate = (type) => `
- <div class="trip-sort__item  trip-sort__item--${type}">
-   <input id="sort-${type}" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-${type}" checked>
-   <label class="trip-sort__btn" for="sort-${type}">${type}</label>
- </div>`
- const createSortingTeamplate = () => `
+const createSortingItemTeamplate = (type, isFirst) => `
+ <div class="trip-sort__item  trip-sort__item--${type.toLowerCase()}">
+   <input id="sort-${type.toLowerCase()}"
+   class="trip-sort__input  visually-hidden" type="radio" name="trip-sort"
+   value="sort-${type.toLowerCase()}" ${isFirst ? 'checked' : ''}>
+   
+   <label class="trip-sort__btn" for="sort-${type.toLowerCase()}">${type}</label>
+ </div>`;
+
+const createSortingTeamplate = () => `
   <form class="trip-events__trip-sort  trip-sort" action="#" method="get">
-    ${SORT_TYPES.map((type) => createSortingItemTeamplate(type)).join('')}
+    ${SORT_TYPES.map((type, index) => createSortingItemTeamplate(type, index === 0)).join('')}
   </form>
- `
-*/
+ `;
 
-const createSortingTeamplate = () =>
-  `<form class="trip-events__trip-sort  trip-sort" action="#" method="get">
-    <div class="trip-sort__item  trip-sort__item--day">
-      <input id="sort-day" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-day" checked>
-      <label class="trip-sort__btn" for="sort-day">Day</label>
-    </div>
-
-    <div class="trip-sort__item  trip-sort__item--event">
-      <input id="sort-event" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-event" disabled>
-      <label class="trip-sort__btn" for="sort-event">Event</label>
-    </div>
-
-    <div class="trip-sort__item  trip-sort__item--time">
-      <input id="sort-time" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-time">
-      <label class="trip-sort__btn" for="sort-time">Time</label>
-    </div>
-
-    <div class="trip-sort__item  trip-sort__item--price">
-      <input id="sort-price" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-price">
-      <label class="trip-sort__btn" for="sort-price">Price</label>
-    </div>
-
-    <div class="trip-sort__item  trip-sort__item--offer">
-      <input id="sort-offer" class="trip-sort__input  visually-hidden" type="radio" name="trip-sort" value="sort-offer" disabled>
-      <label class="trip-sort__btn" for="sort-offer">Offers</label>
-    </div>
-  </form>`;
-
-export default class SortingView {
-  getTemplate() {
+export default class SortingView extends AbstractView{
+  get template() {
     return createSortingTeamplate();
-  }
-
-  getElement() {
-    if(!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }

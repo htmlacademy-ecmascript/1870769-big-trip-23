@@ -24,22 +24,22 @@ const formatDuration = (stopDuration) => {
 };
 
 export class TripEventModel {
+  #offers = [];
+  #destinations = [];
   tripEvents = [];
-  offers = [];
-  destinations = [];
 
   constructor() {
-    this.offers = this.fetchOffers();
-    this.destinations = this.fetchDestinations();
-    this.tripEvents = this.fetchTripEvents();
+    this.#offers = this.offers;
+    this.#destinations = this.destinations;
+    this.tripEvents = this.events;
   }
 
-  fetchTripEvents() {
+  get events() {
     // TODO: заменить на запрос к серверу
     return tripEvents.map((tripEvent) => {
       const eventDuration = dayjs.duration(dayjs(tripEvent.date_to).diff(dayjs(tripEvent.date_from)));
-      const offer = this.offers.find((_offer) => _offer.id === tripEvent.offers[0]);
-      const destination = this.destinations.find((_destination) => _destination.id === tripEvent.destination);
+      const offer = this.#offers.find((_offer) => _offer.id === tripEvent.offers[0]);
+      const destination = this.#destinations.find((_destination) => _destination.id === tripEvent.destination);
 
       return {
         id: tripEvent.id,
@@ -65,12 +65,12 @@ export class TripEventModel {
   }
 
   // TODO: заменить на запрос к серверу
-  fetchOffers() {
+  get offers() {
     return offers;
   }
 
   // TODO: заменить на запрос к серверу
-  fetchDestinations() {
+  get destinations() {
     return destionations;
   }
 }

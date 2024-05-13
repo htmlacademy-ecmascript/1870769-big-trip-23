@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 const createTripEventsView = ({
   type,
@@ -52,24 +52,30 @@ const createTripEventsView = ({
   </ul>`;
 };
 
-export default class TripEventsView {
-  constructor({ tripEvent }) {
-    this.tripEvent = tripEvent;
+export default class TripEventsView extends AbstractView {
+  #eventRollupBtnElement = null;
+  #clickHandler = null;
+  #tripEvent = null;
+
+  constructor({ tripEvent, onOpenEdit }) {
+    super();
+    this.#tripEvent = tripEvent;
+    this.#clickHandler = onOpenEdit;
+    this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
+    this.#eventRollupBtnElement.addEventListener('click', this.#onClick);
   }
 
-  getTemplate() {
-    return createTripEventsView(this.tripEvent);
-  }
-
-  getElement() {
-    if(!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
+  get template() {
+    return createTripEventsView(this.#tripEvent);
   }
 
   removeElement() {
-    this.element = null;
+    super.removeElement();
+    this.#eventRollupBtnElement.removeEventListener('click', this.#onClick);
   }
+
+  #onClick = (evt) => {
+    evt.preventDefault();
+    this.#clickHandler();
+  };
 }

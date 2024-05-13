@@ -1,7 +1,7 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 const createEditFormView = () =>
-  `<li class="trip-events__item">
+  `
     <form class="event event--edit" action="#" method="post">
       <header class="event__header">
         <div class="event__type-wrapper">
@@ -135,22 +135,45 @@ const createEditFormView = () =>
         </section>
       </section>
     </form>
-</li>`;
+`;
 
-export default class EditFormView {
-  getTemplate() {
+export default class EditFormView extends AbstractView {
+  #closeForm = null;
+  #submitForm = null;
+  #eventRollupBtnElement = null;
+  #eventResetBtnElement = null;
+
+  constructor({ onClickCloseEditFiorm, onSubmitEditForm }) {
+    super();
+    this.#closeForm = onClickCloseEditFiorm;
+    this.#submitForm = onSubmitEditForm;
+
+    this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
+    this.#eventResetBtnElement = this.element.querySelector('.event__reset-btn');
+
+    this.element.addEventListener('submit', this.#onSubmitHandler);
+    this.#eventRollupBtnElement.addEventListener('click', this.#onCloseHandler);
+    this.#eventResetBtnElement.addEventListener('click', this.#onCloseHandler);
+  }
+
+  get template() {
     return createEditFormView();
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
   removeElement() {
-    this.element = null;
+    super.removeElement();
+    this.element.removeEventListener('submit', this.#onSubmitHandler);
+    this.#eventRollupBtnElement.removeEventListener('click', this.#onCloseHandler);
+    this.#eventResetBtnElement.removeEventListener('click', this.#onCloseHandler);
   }
+
+  #onCloseHandler = (evt) => {
+    evt.preventDefault();
+    this.#closeForm();
+  };
+
+  #onSubmitHandler = (evt) => {
+    evt.preventDefault();
+    this.#closeForm();
+  };
 }
