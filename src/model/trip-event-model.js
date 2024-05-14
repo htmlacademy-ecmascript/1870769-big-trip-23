@@ -1,7 +1,7 @@
 import { tripEvents } from '../mock/trip-events-mock.js';
 import { offers } from '../mock/trip-offers-mock.js';
 import { destionations } from '../mock/trip-destinations-mock.js';
-import { DateFormats } from '../const.js';
+import { DateFormats, Filters, SORT_TYPES } from '../const.js';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration.js';
 
@@ -27,11 +27,15 @@ export class TripEventModel {
   #offers = [];
   #destinations = [];
   tripEvents = [];
+  #filters = [];
+  #sortTypes = [];
 
   constructor() {
     this.#offers = this.offers;
     this.#destinations = this.destinations;
     this.tripEvents = this.events;
+    this.#filters = Object.values(Filters);
+    this.#sortTypes = SORT_TYPES;
   }
 
   get events() {
@@ -72,5 +76,13 @@ export class TripEventModel {
   // TODO: заменить на запрос к серверу
   get destinations() {
     return destionations;
+  }
+
+  get filters() {
+    return this.#filters;
+  }
+
+  get sortTypes() {
+    return this.#sortTypes;
   }
 }

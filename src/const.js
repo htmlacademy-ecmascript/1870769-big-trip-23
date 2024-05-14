@@ -25,8 +25,27 @@ const DEFAULT_TRIP_EVENT = {
   isFavorite: false,
 };
 
+const SORT_TYPES = ['day', 'event', 'time', 'price', 'offers'];
+
+const Filters = {
+  EVERYTHING: 'everything',
+  FUTURE: 'future',
+  PRESENT: 'present',
+  PAST: 'past',
+};
+
+const NoTripEventMessages = {
+  [Filters.EVERYTHING]: 'Click New Event to create your first point',
+  [Filters.FUTURE]: 'There are no past events now',
+  [Filters.PRESENT]: 'There are no present events now',
+  [Filters.PAST]: 'There are no future events now',
+};
+
 export {
   TRIP_EVENT_TYPE,
   DateFormats,
-  DEFAULT_TRIP_EVENT
+  DEFAULT_TRIP_EVENT,
+  SORT_TYPES,
+  Filters,
+  NoTripEventMessages
 };

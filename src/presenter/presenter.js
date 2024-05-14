@@ -3,6 +3,7 @@ import SortingView from '../view/sorting-view.js';
 import FilterView from '../view/filter-view.js';
 import TripEventsView from '../view/trip-events-view.js';
 import EditFormView from '../view/edit-form-view.js';
+import NoTripEventsView from '../view/no-trip-events-view.js';
 
 export default class Presenter {
   #openedTripEvent = [];
@@ -19,11 +20,11 @@ export default class Presenter {
   }
 
   renderFilter() {
-    render(new FilterView(), this.tripFilterElement);
+    this.#renderFilterView(this.tripEventsModel);
   }
 
   renderSorting() {
-    render(new SortingView(), this.tripEventsElement, RenderPosition.AFTERBEGIN);
+    this.#renderSortingView(this.tripEventsModel);
   }
 
   renderTripEvents() {
@@ -36,12 +37,29 @@ export default class Presenter {
     this.renderTripEvents();
   }
 
+  #renderFilterView({ filters }) {
+    render(new FilterView({ filters }), this.tripFilterElement);
+  }
+
+  #renderSortingView({ sortTypes }) {
+    render(new SortingView({ sortTypes }), this.tripEventsElement, RenderPosition.AFTERBEGIN);
+  }
+
+  #renderNoTripEventsView() {
+    render(new NoTripEventsView({ filters: this.tripEventsModel.filters[0] }), this.tripEventsElement);
+  }
+
   #renderTripEvents({ tripEvents }) {
+    if (tripEvents.length === 0) {
+      this.#renderNoTripEventsView();
+      return;
+    }
     tripEvents.forEach((tripEvent) => {
       this.#renderTripEvent(tripEvent);
     });
   }
 
+  // отрефакторить в отдельный файл
   #renderTripEvent(tripEvent) {
     const onClickOpenEditForm = () => switchToEditForm();
     const onSubmitEditForm = () => switchToViewForm();
