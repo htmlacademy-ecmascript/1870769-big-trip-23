@@ -7,7 +7,6 @@ const createTripOffer = () => ({
   title: getRandomArrayElement(tripOffers),
   price: getRandomInt(300),
 });
-
 const offers = new Array(6).fill(null).map(createTripOffer);
 
 export { offers };

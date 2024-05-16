@@ -74,6 +74,7 @@ export default class Presenter {
 
     const tripEventView = new TripEventsView({ tripEvent, onOpenEdit: onClickOpenEditForm });
     const tripEditFormView = new EditFormView({
+      tripEvent,
       onSubmitEditForm: onSubmitEditForm,
       onClickCloseEditFiorm: onClickCloseEditForm
     });
