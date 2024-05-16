@@ -10,6 +10,7 @@ const createTripEventsView = ({
   isFavorite
 }) => {
   const favoriteClassName = isFavorite ? 'event__favorite-btn--active' : '';
+  const total = basePrice + offerPrice;
 
   return `<ul class="trip-events__list">
     <li class="trip-events__item">
@@ -28,7 +29,7 @@ const createTripEventsView = ({
           <p class="event__duration">${eventDuration}</p>
         </div>
         <p class="event__price">
-          &euro;&nbsp;<span class="event__price-value">${basePrice}</span>
+          &euro;&nbsp;<span class="event__price-value">${total}</span>
         </p>
         <h4 class="visually-hidden">Offers:</h4>
         <ul class="event__selected-offers">

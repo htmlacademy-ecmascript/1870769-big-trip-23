@@ -4,7 +4,7 @@ const getRandomArrayElement = (items) => items[Math.floor(Math.random() * items.
 const getRandomBoolean = () => Math.random() < 0.5;
 const getRandomInt = (max) => Math.round(Math.random() * max);
 const getId = () => `${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 5)}`;
-const getDateWithRandomTime = (date) => dayjs(date).add(getRandomInt(500), 'minute');
+const getDateWithRandomTime = (date) => dayjs(date).add(getRandomInt(500000), 'minute');
 
 const getRandomDate = () => {
   const monthNames = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
