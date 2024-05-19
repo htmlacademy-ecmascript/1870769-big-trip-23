@@ -10,7 +10,7 @@ const generateOfferHTML = (offers) => offers.map((offer) => `
 const createTripEventsView = ({
   type,
   eventDate,
-  eventTitle: {destination, eventCity: eventCity},
+  eventTitle: {eventCity},
   offers,
   eventSchedule: {dateFrom, dateTo, eventDuration},
   basePrice,
@@ -26,7 +26,7 @@ const createTripEventsView = ({
         <div class="event__type">
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">${destination} ${eventCity}</h3>
+        <h3 class="event__title">${type} ${eventCity}</h3>
         <div class="event__schedule">
           <p class="event__time">
             <time class="event__start-time" datetime=${dateFrom}>${dateFrom}</time>

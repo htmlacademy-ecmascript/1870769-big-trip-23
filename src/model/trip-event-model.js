@@ -57,7 +57,7 @@ export class TripEventModel {
         eventDate: dayjs(tripEvent.date_from).format(DATE_MONTH),
         type: tripEvent.type,
         eventTitle: {
-          destination: tripEvent.type,
+          destination: destination,
           eventCity: destination.name
         },
         eventSchedule: {

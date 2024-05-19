@@ -1,55 +1,27 @@
-import { render, RenderPosition, replace } from '../framework/render.js';
-import SortingView from '../view/sorting-view.js';
-import FilterView from '../view/filter-view.js';
+import { render, replace } from '../framework/render.js';
 import TripEventsView from '../view/trip-events-view.js';
 import EditFormView from '../view/edit-form-view.js';
 import NoTripEventsView from '../view/no-trip-events-view.js';
 
-export default class Presenter {
+export default class TripEventsPresenter {
+  #tripEvents = [];
+  #container = null;
   #openedTripEvent = [];
 
-  constructor({ tripEventsModel }) {
-    this.tripFilterElement = document.querySelector('.trip-controls__filters');
-    this.tripEventsElement = document.querySelector('.trip-events');
-
-    this.tripEventsListElement = document.createElement('ul');
-    this.tripEventsListElement.classList.add('trip-events__list');
-    this.tripEventsElement.appendChild(this.tripEventsListElement);
-
-    this.tripEventsModel = tripEventsModel;
-  }
-
-  renderFilter() {
-    this.#renderFilterView(this.tripEventsModel);
-  }
-
-  renderSorting() {
-    this.#renderSortingView(this.tripEventsModel);
-  }
-
-  renderTripEvents() {
-    this.#renderTripEvents(this.tripEventsModel);
+  constructor({ tripEvents, tripEventsElement }) {
+    this.#tripEvents = tripEvents;
+    this.#container = tripEventsElement;
   }
 
   init() {
-    this.renderFilter();
-    this.renderSorting();
-    this.renderTripEvents();
-  }
-
-  #renderFilterView({ filters }) {
-    render(new FilterView({ filters }), this.tripFilterElement);
-  }
-
-  #renderSortingView({ sortTypes }) {
-    render(new SortingView({ sortTypes }), this.tripEventsElement, RenderPosition.AFTERBEGIN);
+    this.#renderTripEvents(this.#tripEvents);
   }
 
   #renderNoTripEventsView() {
-    render(new NoTripEventsView({ filters: this.tripEventsModel.filters[0] }), this.tripEventsElement);
+    render(new NoTripEventsView({ filters: this.#tripEvents.filters[0] }), this.#container);
   }
 
-  #renderTripEvents({ tripEvents }) {
+  #renderTripEvents(tripEvents) {
     if (tripEvents.length === 0) {
       this.#renderNoTripEventsView();
       return;
@@ -59,7 +31,6 @@ export default class Presenter {
     });
   }
 
-  // отрефакторить в отдельный файл
   #renderTripEvent(tripEvent) {
     const onClickOpenEditForm = () => switchToEditForm();
     const onSubmitEditForm = () => switchToViewForm();
@@ -97,6 +68,6 @@ export default class Presenter {
       self.#openedTripEvent = [];
     }
 
-    render(tripEventView, this.tripEventsElement);
+    render(tripEventView, this.#container);
   }
 }
