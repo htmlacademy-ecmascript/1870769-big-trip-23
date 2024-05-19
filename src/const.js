@@ -1,5 +1,15 @@
 const DEFAULT_EVENT_TYPE = 'Flight';
 
+const DEFAULT_TRIP_EVENT = {
+  type: DEFAULT_EVENT_TYPE,
+  dateFrom: new Date(),
+  dateTo: null,
+  destination: null,
+  price: 0,
+  offers: [],
+  isFavorite: false,
+};
+
 const TRIP_EVENT_TYPE = [
   'Taxi', 'Bus', 'Train', 'Ship', 'Drive', 'Flight', 'Check-in', 'Sightseeing', 'Restaurant'
 ];
@@ -13,16 +23,6 @@ const DateFormats = {
   DAY: 'DD[d] HH[h] mm[m]',
   HOURS: 'HH[h] mm[m]',
   MINUTES: 'mm[m]'
-};
-
-const DEFAULT_TRIP_EVENT = {
-  type: DEFAULT_EVENT_TYPE,
-  dateFrom: new Date(),
-  dateTo: null,
-  destination: null,
-  price: 0,
-  offers: [],
-  isFavorite: false,
 };
 
 const SORT_TYPES = ['day', 'event', 'time', 'price', 'offers'];

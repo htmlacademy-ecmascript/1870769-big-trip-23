@@ -42,8 +42,15 @@ export class TripEventModel {
     // TODO: заменить на запрос к серверу
     return tripEvents.map((tripEvent) => {
       const eventDuration = dayjs.duration(dayjs(tripEvent.date_to).diff(dayjs(tripEvent.date_from)));
-      const offer = this.#offers.find((_offer) => _offer.id === tripEvent.offers[0]);
       const destination = this.#destinations.find((_destination) => _destination.id === tripEvent.destination);
+
+      const eventOffers = tripEvent.offers.map((offerId) => {
+        const offer = this.#offers.find((_offer) => _offer.id === offerId);
+        return {
+          offerTitle: offer.title,
+          offerPrice: offer.price,
+        };
+      });
 
       return {
         id: tripEvent.id,
@@ -58,10 +65,7 @@ export class TripEventModel {
           dateTo: dayjs(tripEvent.date_to).format(TIME),
           eventDuration: formatDuration(eventDuration),
         },
-        offers: {
-          offerTitle: offer.title,
-          offerPrice: offer.price,
-        },
+        offers: eventOffers,
         basePrice: tripEvent.base_price,
         isFavorite: tripEvent.is_favorite,
       };

@@ -1,16 +1,23 @@
 import AbstractView from '../framework/view/abstract-view.js';
 
+const generateOfferHTML = (offers) => offers.map((offer) => `
+  <li class="event__offer">
+    <span class="event__offer-title">${offer.offerTitle}</span>
+    &plus;&euro;&nbsp;
+    <span class="event__offer-price">${offer.offerPrice}</span>
+  </li>`).join('');
+
 const createTripEventsView = ({
   type,
   eventDate,
   eventTitle: {destination, eventCity: eventCity},
-  offers: {offerPrice, offerTitle},
+  offers,
   eventSchedule: {dateFrom, dateTo, eventDuration},
   basePrice,
   isFavorite
 }) => {
   const favoriteClassName = isFavorite ? 'event__favorite-btn--active' : '';
-  const total = basePrice + offerPrice;
+  const total = basePrice + offers.reduce((sum, offer) => sum + offer.offerPrice, 0);
 
   return `<ul class="trip-events__list">
     <li class="trip-events__item">
@@ -33,11 +40,7 @@ const createTripEventsView = ({
         </p>
         <h4 class="visually-hidden">Offers:</h4>
         <ul class="event__selected-offers">
-          <li class="event__offer">
-            <span class="event__offer-title">${offerTitle}</span>
-            &plus;&euro;&nbsp;
-            <span class="event__offer-price">${offerPrice}</span>
-          </li>
+          ${generateOfferHTML(offers)}
         </ul>
         <button class="event__favorite-btn ${favoriteClassName}" type="button">
           <span class="visually-hidden">Add to favorite</span>
