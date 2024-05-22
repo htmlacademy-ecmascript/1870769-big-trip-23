@@ -1,16 +1,22 @@
 import AbstractView from '../framework/view/abstract-view.js';
 
+const generateOfferHTML = (offers) => offers.map((offer) => `
+  <li class="event__offer">
+    <span class="event__offer-title">${offer.offerTitle}</span>
+    &plus;&euro;&nbsp;
+    <span class="event__offer-price">${offer.offerPrice}</span>
+  </li>`).join('');
+
 const createTripEventsView = ({
   type,
   eventDate,
-  eventTitle: {destination, eventCity: eventCity},
-  offers: {offerPrice, offerTitle},
+  eventTitle: {eventCity},
+  offers,
   eventSchedule: {dateFrom, dateTo, eventDuration},
   basePrice,
   isFavorite
 }) => {
   const favoriteClassName = isFavorite ? 'event__favorite-btn--active' : '';
-  const total = basePrice + offerPrice;
 
   return `<ul class="trip-events__list">
     <li class="trip-events__item">
@@ -19,7 +25,7 @@ const createTripEventsView = ({
         <div class="event__type">
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">${destination} ${eventCity}</h3>
+        <h3 class="event__title">${type} ${eventCity}</h3>
         <div class="event__schedule">
           <p class="event__time">
             <time class="event__start-time" datetime=${dateFrom}>${dateFrom}</time>
@@ -29,15 +35,11 @@ const createTripEventsView = ({
           <p class="event__duration">${eventDuration}</p>
         </div>
         <p class="event__price">
-          &euro;&nbsp;<span class="event__price-value">${total}</span>
+          &euro;&nbsp;<span class="event__price-value">${basePrice}</span>
         </p>
         <h4 class="visually-hidden">Offers:</h4>
         <ul class="event__selected-offers">
-          <li class="event__offer">
-            <span class="event__offer-title">${offerTitle}</span>
-            &plus;&euro;&nbsp;
-            <span class="event__offer-price">${offerPrice}</span>
-          </li>
+          ${generateOfferHTML(offers)}
         </ul>
         <button class="event__favorite-btn ${favoriteClassName}" type="button">
           <span class="visually-hidden">Add to favorite</span>
@@ -55,15 +57,22 @@ const createTripEventsView = ({
 
 export default class TripEventsView extends AbstractView {
   #eventRollupBtnElement = null;
-  #clickHandler = null;
+  #eventFavoritBtnElement = null;
+  #clickFavoritBtn = null;
+  #clickOpenHandler = null;
   #tripEvent = null;
 
-  constructor({ tripEvent, onOpenEdit }) {
+  constructor({ tripEvent, onOpenEdit, onFavoritClick }) {
     super();
     this.#tripEvent = tripEvent;
-    this.#clickHandler = onOpenEdit;
+
+    this.#clickOpenHandler = onOpenEdit;
     this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
-    this.#eventRollupBtnElement.addEventListener('click', this.#onClick);
+    this.#eventRollupBtnElement.addEventListener('click', this.#onOpenClickHandler);
+
+    this.#clickFavoritBtn = onFavoritClick;
+    this.#eventFavoritBtnElement = this.element.querySelector('.event__favorite-btn');
+    this.#eventFavoritBtnElement.addEventListener('click', this.#onFavoritClickHandler);
   }
 
   get template() {
@@ -72,11 +81,17 @@ export default class TripEventsView extends AbstractView {
 
   removeElement() {
     super.removeElement();
-    this.#eventRollupBtnElement.removeEventListener('click', this.#onClick);
+    this.#eventRollupBtnElement.removeEventListener('click', this.#onOpenClickHandler);
+    this.#eventFavoritBtnElement.removeEventListener('click', this.#onOpenClickHandler);
   }
 
-  #onClick = (evt) => {
+  #onOpenClickHandler = (evt) => {
     evt.preventDefault();
-    this.#clickHandler();
+    this.#clickOpenHandler();
+  };
+
+  #onFavoritClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#clickFavoritBtn(this.#tripEvent);
   };
 }
