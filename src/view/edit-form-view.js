@@ -14,7 +14,6 @@ const generateEventTypeItem = (type) => `
 
 const lastWords = (offerTitle) => {
   const words = offerTitle.split(' ');
-
   return words[words.length - 1];
 };
 
@@ -57,7 +56,6 @@ const createEditFormView = ({
   basePrice,
 }) => {
   const { DATE_TIME } = DateFormats;
-  const total = basePrice + offers.reduce((sum, offer) => sum + offer.offerPrice, 0);
   const offersHTML = offers.map(generateOfferHTML).join('');
 
   return `
@@ -106,7 +104,7 @@ const createEditFormView = ({
             &euro;
           </label>
           <input class="event__input  event__input--price" id="event-price-1" type="text"
-          name="event-price" value="${total}">
+          name="event-price" value="${basePrice}">
         </div>
 
         <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>

@@ -17,7 +17,6 @@ const createTripEventsView = ({
   isFavorite
 }) => {
   const favoriteClassName = isFavorite ? 'event__favorite-btn--active' : '';
-  const total = basePrice + offers.reduce((sum, offer) => sum + offer.offerPrice, 0);
 
   return `<ul class="trip-events__list">
     <li class="trip-events__item">
@@ -36,7 +35,7 @@ const createTripEventsView = ({
           <p class="event__duration">${eventDuration}</p>
         </div>
         <p class="event__price">
-          &euro;&nbsp;<span class="event__price-value">${total}</span>
+          &euro;&nbsp;<span class="event__price-value">${basePrice}</span>
         </p>
         <h4 class="visually-hidden">Offers:</h4>
         <ul class="event__selected-offers">
@@ -58,15 +57,22 @@ const createTripEventsView = ({
 
 export default class TripEventsView extends AbstractView {
   #eventRollupBtnElement = null;
-  #clickHandler = null;
+  #eventFavoritBtnElement = null;
+  #clickFavoritBtn = null;
+  #clickOpenHandler = null;
   #tripEvent = null;
 
-  constructor({ tripEvent, onOpenEdit }) {
+  constructor({ tripEvent, onOpenEdit, onFavoritClick }) {
     super();
     this.#tripEvent = tripEvent;
-    this.#clickHandler = onOpenEdit;
+
+    this.#clickOpenHandler = onOpenEdit;
     this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
-    this.#eventRollupBtnElement.addEventListener('click', this.#onClick);
+    this.#eventRollupBtnElement.addEventListener('click', this.#onOpenClickHandler);
+
+    this.#clickFavoritBtn = onFavoritClick;
+    this.#eventFavoritBtnElement = this.element.querySelector('.event__favorite-btn');
+    this.#eventFavoritBtnElement.addEventListener('click', this.#onFavoritClickHandler);
   }
 
   get template() {
@@ -75,11 +81,17 @@ export default class TripEventsView extends AbstractView {
 
   removeElement() {
     super.removeElement();
-    this.#eventRollupBtnElement.removeEventListener('click', this.#onClick);
+    this.#eventRollupBtnElement.removeEventListener('click', this.#onOpenClickHandler);
+    this.#eventFavoritBtnElement.removeEventListener('click', this.#onOpenClickHandler);
   }
 
-  #onClick = (evt) => {
+  #onOpenClickHandler = (evt) => {
     evt.preventDefault();
-    this.#clickHandler();
+    this.#clickOpenHandler();
+  };
+
+  #onFavoritClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#clickFavoritBtn(this.#tripEvent);
   };
 }
