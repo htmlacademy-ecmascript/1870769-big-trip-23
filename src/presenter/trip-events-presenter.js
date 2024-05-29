@@ -2,11 +2,13 @@ import { render, replace } from '../framework/render.js';
 import TripEventsView from '../view/trip-events-view.js';
 import EditFormView from '../view/edit-form-view.js';
 import NoTripEventsView from '../view/no-trip-events-view.js';
+import { SORT_TYPES } from '../const.js';
 
 export default class TripEventsPresenter {
   #tripEvents = [];
   #container = null;
   #openedTripEvent = [];
+  #currentSortType = SORT_TYPES.DAY;
 
   constructor({ tripEvents, tripEventsElement }) {
     this.#tripEvents = tripEvents;
@@ -17,8 +19,38 @@ export default class TripEventsPresenter {
     this.#renderTripEvents(this.#tripEvents);
   }
 
+  setSorting(sortType) {
+    if (this.#currentSortType === sortType) {
+      return;
+    }
+
+    this.#currentSortType = sortType;
+    this.#clearTripEventsList();
+    this.#renderTripEvents(this.#getSortedEvents());
+  }
+
+  #getSortedEvents() {
+    switch (this.#currentSortType) {
+      case SORT_TYPES.DAY:
+        return this.#tripEvents
+          .slice()
+          .sort((a, b) => new Date(a.eventSchedule.dateFrom) - new Date(b.eventSchedule.dateFrom));
+      case SORT_TYPES.TIME:
+        return this.#tripEvents.slice().sort(
+          (a, b) =>
+            (new Date(a.eventSchedule.dateTo) - new Date(a.eventSchedule.dateFrom))
+          - (new Date(b.eventSchedule.dateTo) - new Date(b.eventSchedule.dateFrom))
+        );
+      case SORT_TYPES.PRICE:
+        return this.#tripEvents.slice().sort((a, b) => b.basePrice - a.basePrice);
+      default:
+        return this.#tripEvents;
+    }
+  }
+
   #renderNoTripEventsView() {
-    render(new NoTripEventsView({ filters: this.#tripEvents.filters[0] }), this.#container);
+    const filters = this.#tripEvents.filters || [];
+    render(new NoTripEventsView({ filters: filters[0] }), this.#container);
   }
 
   #renderTripEvents(tripEvents) {
@@ -26,6 +58,7 @@ export default class TripEventsPresenter {
       this.#renderNoTripEventsView();
       return;
     }
+
     tripEvents.forEach((tripEvent) => {
       this.#renderTripEvent(tripEvent);
     });
@@ -93,7 +126,11 @@ export default class TripEventsPresenter {
       return;
     }
 
-    this.#tripEvents[index] = updatedEvent;
+    this.#tripEvents = [
+      ...this.#tripEvents.slice(0, index),
+      updatedEvent,
+      ...this.#tripEvents.slice(index + 1)
+    ];
 
     this.#clearTripEventsList();
     this.#renderTripEvent(updatedEvent);

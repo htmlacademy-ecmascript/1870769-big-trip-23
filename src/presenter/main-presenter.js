@@ -1,4 +1,4 @@
-import { render, RenderPosition } from '../framework/render.js';
+import { render, RenderPosition, remove } from '../framework/render.js';
 import SortingView from '../view/sorting-view.js';
 import FilterView from '../view/filter-view.js';
 import TripEventsPresenter from './trip-events-presenter.js';
@@ -13,6 +13,11 @@ export default class MainPresenter {
     this.tripEventsElement.appendChild(this.tripEventsListElement);
 
     this.tripEventsModel = tripEventsModel;
+
+    this.tripEventsPresenter = new TripEventsPresenter({
+      tripEvents: this.tripEventsModel.tripEvents,
+      tripEventsElement: this.tripEventsElement
+    });
   }
 
   renderFilter() {
@@ -24,7 +29,7 @@ export default class MainPresenter {
   }
 
   renderTripEvents() {
-    this.#renderTripEvents(this.tripEventsModel, this.tripEventsElement);
+    this.#renderTripEvents();
   }
 
   init() {
@@ -34,18 +39,25 @@ export default class MainPresenter {
   }
 
   #renderFilterView({ filters }) {
-    render(new FilterView({ filters }), this.tripFilterElement);
+    render(new FilterView({ filters }), this.tripFilterElement, RenderPosition.BEFOREBEGIN);
   }
 
   #renderSortingView({ sortTypes }) {
-    render(new SortingView({ sortTypes }), this.tripEventsElement, RenderPosition.AFTERBEGIN);
+    render(
+      new SortingView({
+        sortTypes: sortTypes,
+        onSortTypeChange: this.#handleSortTypeChange
+      }),
+      this.tripEventsElement,
+      RenderPosition.AFTERBEGIN
+    );
   }
 
   #renderTripEvents() {
-    const tripEventsPresenter = new TripEventsPresenter({
-      tripEvents: this.tripEventsModel.tripEvents,
-      tripEventsElement: this.tripEventsElement
-    });
-    tripEventsPresenter.init();
+    this.tripEventsPresenter.init();
   }
+
+  #handleSortTypeChange = (sortType) => {
+    this.tripEventsPresenter.setSorting(sortType);
+  };
 }

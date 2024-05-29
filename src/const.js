@@ -25,7 +25,13 @@ const DateFormats = {
   MINUTES: 'mm[m]'
 };
 
-const SORT_TYPES = ['day', 'event', 'time', 'price', 'offers'];
+const SORT_TYPES = {
+  DAY: 'day',
+  EVENT: 'event',
+  TIME: 'time',
+  PRICE: 'price',
+  OFFERS: 'offers'
+};
 
 const Filters = {
   EVERYTHING: 'everything',

@@ -35,7 +35,7 @@ export class TripEventModel {
     this.#destinations = this.destinations;
     this.tripEvents = this.events;
     this.#filters = Object.values(Filters);
-    this.#sortTypes = SORT_TYPES;
+    this.#sortTypes = Object.values(SORT_TYPES);
   }
 
   get events() {
