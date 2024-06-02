@@ -67,12 +67,9 @@ export default class TripEventsView extends AbstractView {
     this.#tripEvent = tripEvent;
 
     this.#clickOpenHandler = onOpenEdit;
-    this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
-    this.#eventRollupBtnElement.addEventListener('click', this.#onOpenClickHandler);
-
     this.#clickFavoritBtn = onFavoritClick;
-    this.#eventFavoritBtnElement = this.element.querySelector('.event__favorite-btn');
-    this.#eventFavoritBtnElement.addEventListener('click', this.#onFavoritClickHandler);
+
+    this.#bindEventHandlers();
   }
 
   get template() {
@@ -81,8 +78,20 @@ export default class TripEventsView extends AbstractView {
 
   removeElement() {
     super.removeElement();
+    this.#unbindEventHandlers();
+  }
+
+  #bindEventHandlers() {
+    this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
+    this.#eventFavoritBtnElement = this.element.querySelector('.event__favorite-btn');
+
+    this.#eventRollupBtnElement.addEventListener('click', this.#onOpenClickHandler);
+    this.#eventFavoritBtnElement.addEventListener('click', this.#onFavoritClickHandler);
+  }
+
+  #unbindEventHandlers() {
     this.#eventRollupBtnElement.removeEventListener('click', this.#onOpenClickHandler);
-    this.#eventFavoritBtnElement.removeEventListener('click', this.#onOpenClickHandler);
+    this.#eventFavoritBtnElement.removeEventListener('click', this.#onFavoritClickHandler);
   }
 
   #onOpenClickHandler = (evt) => {

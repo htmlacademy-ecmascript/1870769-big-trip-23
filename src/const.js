@@ -25,7 +25,7 @@ const DateFormats = {
   MINUTES: 'mm[m]'
 };
 
-const SORT_TYPES = {
+const SortTypes = {
   DAY: 'day',
   EVENT: 'event',
   TIME: 'time',
@@ -51,7 +51,7 @@ export {
   TRIP_EVENT_TYPE,
   DateFormats,
   DEFAULT_TRIP_EVENT,
-  SORT_TYPES,
+  SortTypes,
   Filters,
   NoTripEventMessages
 };
