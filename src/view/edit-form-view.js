@@ -77,12 +77,12 @@ const createEditFormView = ({
 
         <div class="event__field-group  event__field-group--destination">
           <label class="event__label  event__type-output" for="event-destination-1">
-            ${eventCity}
+          ${type}
           </label>
           <input class="event__input  event__input--destination" id="event-destination-1"
-           type="text" name="event-destination" value="${type}" list="destination-list-1">
+           type="text" name="event-destination" value=${eventCity} list="destination-list-1">
           <datalist id="destination-list-1">
-            <option value="Amsterdam"></option>
+            <option value=${eventCity}></option>
             <option value="Geneva"></option>
             <option value="Chamonix"></option>
           </datalist>
@@ -130,23 +130,16 @@ const createEditFormView = ({
 export default class EditFormView extends AbstractView {
   #closeForm = null;
   #submitForm = null;
-  #eventRollupBtnElement = null;
-  #eventResetBtnElement = null;
   #tripEvent = null;
 
-  constructor({ tripEvent, onClickCloseEditFiorm, onSubmitEditForm }) {
+  constructor({ tripEvent, onClickCloseEditForm, onSubmitEditForm }) {
     super();
     this.#tripEvent = tripEvent;
 
-    this.#closeForm = onClickCloseEditFiorm;
+    this.#closeForm = onClickCloseEditForm;
     this.#submitForm = onSubmitEditForm;
 
-    this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
-    this.#eventResetBtnElement = this.element.querySelector('.event__reset-btn');
-
-    this.element.addEventListener('submit', this.#onSubmitHandler);
-    this.#eventRollupBtnElement.addEventListener('click', this.#onCloseHandler);
-    this.#eventResetBtnElement.addEventListener('click', this.#onCloseHandler);
+    this.#bindEventHandlers();
   }
 
   get template() {
@@ -155,9 +148,25 @@ export default class EditFormView extends AbstractView {
 
   removeElement() {
     super.removeElement();
-    this.element.removeEventListener('submit', this.#onSubmitHandler);
-    this.#eventRollupBtnElement.removeEventListener('click', this.#onCloseHandler);
-    this.#eventResetBtnElement.removeEventListener('click', this.#onCloseHandler);
+    this.#unbindEventHandlers();
+  }
+
+  #bindEventHandlers() {
+    this.element.querySelector('.event__rollup-btn')
+      .addEventListener('click', this.#onCloseHandler);
+    this.element.querySelector('.event__reset-btn')
+      .addEventListener('click', this.#onCloseHandler);
+    this.element.querySelector('.event__save-btn')
+      .addEventListener('submit', this.#onSubmitHandler);
+  }
+
+  #unbindEventHandlers() {
+    this.element.querySelector('.event__rollup-btn')
+      .removeEventListener('click', this.#onCloseHandler);
+    this.element.querySelector('.event__reset-btn')
+      .removeEventListener('click', this.#onCloseHandler);
+    this.element.querySelector('.event__save-btn')
+      .removeEventListener('submit', this.#onSubmitHandler);
   }
 
   #onCloseHandler = (evt) => {

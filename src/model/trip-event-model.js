@@ -1,7 +1,7 @@
 import { tripEvents } from '../mock/trip-events-mock.js';
 import { offers } from '../mock/trip-offers-mock.js';
 import { destionations } from '../mock/trip-destinations-mock.js';
-import { DateFormats, Filters, SORT_TYPES } from '../const.js';
+import { DateFormats, Filters, SortTypes } from '../const.js';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration.js';
 
@@ -35,7 +35,7 @@ export class TripEventModel {
     this.#destinations = this.destinations;
     this.tripEvents = this.events;
     this.#filters = Object.values(Filters);
-    this.#sortTypes = SORT_TYPES;
+    this.#sortTypes = Object.values(SortTypes);
   }
 
   get events() {
@@ -65,6 +65,7 @@ export class TripEventModel {
           dateTo: dayjs(tripEvent.date_to).format(TIME),
           eventDuration: formatDuration(eventDuration),
         },
+        durationInMinutes: eventDuration.asMinutes(),
         offers: eventOffers,
         basePrice: tripEvent.base_price,
         isFavorite: tripEvent.is_favorite,

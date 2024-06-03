@@ -26,6 +26,6 @@ const createTripEventsMock = () => {
   };
 };
 
-const tripEvents = new Array(8).fill(null).map(createTripEventsMock);
+const tripEvents = new Array(3).fill(null).map(createTripEventsMock);
 
 export { tripEvents };

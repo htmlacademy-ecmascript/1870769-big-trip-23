@@ -25,7 +25,13 @@ const DateFormats = {
   MINUTES: 'mm[m]'
 };
 
-const SORT_TYPES = ['day', 'event', 'time', 'price', 'offers'];
+const SortTypes = {
+  DAY: 'day',
+  EVENT: 'event',
+  TIME: 'time',
+  PRICE: 'price',
+  OFFERS: 'offers'
+};
 
 const Filters = {
   EVERYTHING: 'everything',
@@ -45,7 +51,7 @@ export {
   TRIP_EVENT_TYPE,
   DateFormats,
   DEFAULT_TRIP_EVENT,
-  SORT_TYPES,
+  SortTypes,
   Filters,
   NoTripEventMessages
 };
