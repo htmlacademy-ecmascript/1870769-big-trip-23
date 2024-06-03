@@ -1,4 +1,4 @@
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { DateFormats, TRIP_EVENT_TYPE } from '../const.js';
 import dayjs from 'dayjs';
 
@@ -127,14 +127,13 @@ const createEditFormView = ({
 `;
 };
 
-export default class EditFormView extends AbstractView {
+export default class EditFormView extends AbstractStatefulView {
   #closeForm = null;
   #submitForm = null;
-  #tripEvent = null;
 
   constructor({ tripEvent, onClickCloseEditForm, onSubmitEditForm }) {
     super();
-    this.#tripEvent = tripEvent;
+    this._setState(EditFormView.parseListElementToState(tripEvent));
 
     this.#closeForm = onClickCloseEditForm;
     this.#submitForm = onSubmitEditForm;
@@ -143,7 +142,7 @@ export default class EditFormView extends AbstractView {
   }
 
   get template() {
-    return createEditFormView(this.#tripEvent);
+    return createEditFormView(this._state);
   }
 
   removeElement() {
@@ -179,4 +178,8 @@ export default class EditFormView extends AbstractView {
     this.#submitForm();
     this.#closeForm();
   };
+
+  static parseListElementToState(tripEvent) {
+    return {...tripEvent};
+  }
 }
