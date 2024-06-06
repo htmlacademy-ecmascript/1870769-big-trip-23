@@ -4,12 +4,18 @@ import SortingView from '../view/sorting-view.js';
 import FilterView from '../view/filter-view.js';
 import NoTripEventsView from '../view/no-trip-events-view.js';
 import { SortTypes } from '../const.js';
-import { sortingEventsByDate, sortingEventsByPrice, sortingEventsByTime, updateItem } from '../utils.js';
+import {
+  sortingEventsByDate,
+  sortingEventsByPrice,
+  sortingEventsByTime,
+  updateItem
+} from '../utils.js';
 
 export default class MainPresenter {
   #currentSortType = SortTypes.DAY;
   #tripEventPresenterMap = new Map();
   #tripEvents = [];
+  #cities = [];
 
   constructor({ tripEventsModel }) {
     this.tripFilterElement = document.querySelector('.trip-controls__filters');
@@ -21,6 +27,7 @@ export default class MainPresenter {
 
     this.tripEventsModel = tripEventsModel;
     this.#tripEvents = tripEventsModel.tripEvents;
+    this.#cities = tripEventsModel.allCities;
   }
 
   init() {
@@ -47,22 +54,23 @@ export default class MainPresenter {
   }
 
   #renderTripEvents() {
+    const cities = this.#cities;
     if (this.#tripEvents.length === 0) {
       this.#renderNoTripEventsView();
       return;
     }
 
-    this.#tripEvents.forEach((tripEvent) => this.#renderTripEvent(tripEvent));
+    this.#tripEvents.forEach((tripEvent) => this.#renderTripEvent(tripEvent, cities));
   }
 
-  #renderTripEvent(tripEvent) {
+  #renderTripEvent(tripEvent, cities) {
     const tripEventPresenter = new TripEventPresenter({
       tripEventsElement: this.tripEventsListElement,
       onViewChange: this.#handleViewChange.bind(this),
       onFavoriteClick: this.#handleFavoriteClick.bind(this)
     });
 
-    tripEventPresenter.init(tripEvent);
+    tripEventPresenter.init(tripEvent, cities);
     this.#tripEventPresenterMap.set(tripEvent.id, tripEventPresenter);
   }
 

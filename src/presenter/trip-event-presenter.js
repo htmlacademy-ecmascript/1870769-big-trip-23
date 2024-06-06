@@ -10,8 +10,9 @@ export default class TripEventsPresenter {
   #tripEditFormView = null;
 
   #tripEvent = null;
-  #onViewChange = null;
+  #allCitiesDestinations = [];
 
+  #onViewChange = null;
   #onFavoriteClick = null;
   #escKeydownHandler = null;
 
@@ -21,8 +22,9 @@ export default class TripEventsPresenter {
     this.#onFavoriteClick = onFavoriteClick;
   }
 
-  init(tripEvent) {
+  init(tripEvent, cities) {
     this.#tripEvent = tripEvent;
+    this.#allCitiesDestinations = cities;
 
     this.#tripEventView = new TripEventsView({
       tripEvent,
@@ -32,6 +34,7 @@ export default class TripEventsPresenter {
 
     this.#tripEditFormView = new EditFormView({
       tripEvent: this.#tripEvent,
+      cities: this.#allCitiesDestinations,
       onSubmitEditForm: this.#onSubmitEditForm.bind(this),
       onClickCloseEditForm: this.#onClickCloseEditForm.bind(this)
     });
@@ -46,6 +49,7 @@ export default class TripEventsPresenter {
 
   resetView() {
     if (this.#openedTripEvent.length > 0) {
+      this.#tripEditFormView.reset(this.#tripEvent);
       this.#switchToViewForm();
     }
   }
@@ -82,16 +86,19 @@ export default class TripEventsPresenter {
   }
 
   #onSubmitEditForm () {
+    this.#tripEditFormView.reset(this.#tripEvent);
     this.#switchToViewForm();
   }
 
   #onClickCloseEditForm() {
+    this.#tripEditFormView.reset(this.#tripEvent);
     this.#switchToViewForm();
   }
 
   #onEscKeydown(evt) {
     if (evt.key === 'Escape') {
       evt.preventDefault();
+      this.#tripEditFormView.reset(this.#tripEvent);
       this.#switchToViewForm();
     }
   }

@@ -9,11 +9,11 @@ const createPicture = (city) => ({
 
 const createDestinationsMock = () => {
   const city = getRandomArrayElement(CITIES);
-  return{
+  return {
     id: getId(),
+    description: `${city}, there should be a description of the city`,
     name: city,
     picture: createPicture(city),
-    description: `${city}, there should be a description of the city`
   };
 };
 

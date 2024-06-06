@@ -56,10 +56,7 @@ export class TripEventModel {
         id: tripEvent.id,
         eventDate: dayjs(tripEvent.date_from).format(DATE_MONTH),
         type: tripEvent.type,
-        eventTitle: {
-          destination: destination,
-          eventCity: destination.name
-        },
+        destination: destination,
         eventSchedule: {
           dateFrom: dayjs(tripEvent.date_from).format(TIME),
           dateTo: dayjs(tripEvent.date_to).format(TIME),
@@ -89,5 +86,9 @@ export class TripEventModel {
 
   get sortTypes() {
     return this.#sortTypes;
+  }
+
+  get allCities() {
+    return this.#destinations.map((destination) => destination.name);
   }
 }
