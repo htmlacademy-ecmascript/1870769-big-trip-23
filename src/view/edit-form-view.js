@@ -12,28 +12,24 @@ const generateEventTypeItem = (type) => `
 </div>
 `;
 
-const lastWords = (offerTitle) => {
-  const words = offerTitle.split(' ');
-  return words[words.length - 1];
-};
-
-const generateOfferHTML = (offers, isAnyOffers) => {
+const generateOfferHTML = (allOffers, isAnyOffers) => {
+  const words = allOffers[0].title.split(' ');
+  const lastWord = words[words.length - 1];
   let count = 0;
 
   if (isAnyOffers) {
-    return offers.map((offer) => {
-      const lastWord = lastWords(offer.offerTitle);
+    return allOffers.map((offer) => {
       count++;
       return `
 <div class="event__offer-selector">
   <input class="event__offer-checkbox visually-hidden"
-   id="event-offer-${lastWord}-${count}"
+   id="event-offer-${offer.id}-${count}"
    ${offer.isChecked ? 'checked' : ''}
   type="checkbox" name="event-offer-${lastWord}">
-  <label class="event__offer-label" for="event-offer-${lastWord}-${count}">
-    <span class="event__offer-title">${offer.offerTitle}</span>
+  <label class="event__offer-label" for="event-offer-${offer.id}-${count}">
+    <span class="event__offer-title">${offer.title}</span>
     &plus;&euro;&nbsp;
-    <span class="event__offer-price">${offer.offerPrice}</span>
+    <span class="event__offer-price">${offer.price}</span>
   </label>
 </div>
 `;
@@ -46,7 +42,7 @@ const generateOfferHTML = (offers, isAnyOffers) => {
 const createPhotoTape = (pictures) => `
     <div class="event__photos-container">
       <div class="event__photos-tape">
-       <img class="event__photo" src="${pictures.src}" alt="${pictures.description}">
+       <img class="event__photo" src="${pictures}" alt="${pictures.description}">
       </div>
     </div>`;
 
@@ -77,13 +73,13 @@ const createEditFormView = ({
   destination,
   eventDate,
   eventSchedule: {dateFrom, dateTo},
-  offers,
+  allOffers,
   isAnyOffers,
   basePrice,
-  allCities
+  allCities,
 }) => {
   const { DATE_TIME } = DateFormats;
-  const offersHTML = generateOfferHTML(offers, isAnyOffers);
+  const offersHTML = generateOfferHTML(allOffers, isAnyOffers);
   const { picture, name } = destination;
 
   return `
@@ -152,21 +148,23 @@ const createEditFormView = ({
 export default class EditFormView extends AbstractStatefulView {
   #closeForm = null;
   #submitForm = null;
-  #cities = [];
 
-  constructor({ tripEvent, onClickCloseEditForm, onSubmitEditForm, cities }) {
+  constructor({ tripEvent, onClickCloseEditForm, onSubmitEditForm, cities, offers }) {
     super();
-    this._setState(EditFormView.parseListElementToState(tripEvent));
-
+    this._setState();
+    this._setState({
+      ...EditFormView.parseListElementToState(tripEvent),
+      allOffers: offers,
+      allCities: cities
+    });
     this.#closeForm = onClickCloseEditForm;
     this.#submitForm = onSubmitEditForm;
-    this.#cities = cities;
 
     this._restoreHandlers();
   }
 
   get template() {
-    return createEditFormView({ ...this._state, allCities: this.#cities });
+    return createEditFormView(this._state);
   }
 
   reset(tripEvent) {
@@ -205,7 +203,6 @@ export default class EditFormView extends AbstractStatefulView {
   #onSubmitHandler = (evt) => {
     evt.preventDefault();
     this.#submitForm(EditFormView.parseStateToListElement(this._state));
-    this.#closeForm();
   };
 
   #destinationInputHandler = (evt) => {
@@ -217,18 +214,66 @@ export default class EditFormView extends AbstractStatefulView {
 
   #eventTypeToggleHandler = (evt) => {
     evt.preventDefault();
+
     if (evt.target.value !== undefined) {
-      const newEvent = evt.target.value;
+      const newEventType = evt.target.value;
+      const newOffers = this.#getOffersByType(newEventType);
 
       this._setState({
-        type: newEvent,
+        type: newEventType,
+        allOffers: newOffers
       });
 
       this.updateElement({
-        type: newEvent
+        type: newEventType,
+        allOffers: newOffers
       });
     }
   };
+
+  #getOffersByType(type) {
+    const allOffers = {
+      'taxi': [
+        {title: 'Upgrade to a business class', price: 50, isChecked: false},
+        {title: 'Choose the radio station', price: 10, isChecked: false},
+      ],
+      'bus': [
+        {title: 'Infotainment system', price: 5, isChecked: false},
+        {title: 'Comfortable seats', price: 15, isChecked: false},
+      ],
+      'train': [
+        {title: 'Meal', price: 10, isChecked: false},
+        {title: 'Wifi', price: 5, isChecked: false},
+      ],
+      'ship': [
+        {title: 'Private cabin', price: 100, isChecked: false},
+        {title: 'Tour guide', price: 50, isChecked: false},
+      ],
+      'drive': [
+        {title: 'GPS', price: 20, isChecked: false},
+        {title: 'Child seat', price: 10, isChecked: false},
+      ],
+      'flight': [
+        {title: 'Add luggage', price: 30, isChecked: false},
+        {title: 'Premium seat', price: 100, isChecked: false},
+      ],
+      'check-in': [
+        {title: 'Early check-in', price: 20, isChecked: false},
+        {title: 'Late check-out', price: 20, isChecked: false},
+      ],
+      'sightseeing': [
+        {title: 'Local guide', price: 40, isChecked: false},
+        {title: 'Skip-the-line', price: 30, isChecked: false},
+      ],
+      'restaurant': [
+        {title: 'Vegetarian option', price: 15, isChecked: false},
+        {title: 'VIP area', price: 70, isChecked: false},
+      ],
+    };
+
+    return allOffers[type] || [];
+  }
+
 
   #offersChangeToggleHandler = () => {
     const elements = this.element.querySelectorAll('.event__offer-checkbox');

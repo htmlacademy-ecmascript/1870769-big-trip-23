@@ -11,6 +11,7 @@ export default class TripEventsPresenter {
 
   #tripEvent = null;
   #allCitiesDestinations = [];
+  #offers = [];
 
   #onViewChange = null;
   #onFavoriteClick = null;
@@ -22,9 +23,10 @@ export default class TripEventsPresenter {
     this.#onFavoriteClick = onFavoriteClick;
   }
 
-  init(tripEvent, cities) {
+  init(tripEvent, cities, offers) {
     this.#tripEvent = tripEvent;
     this.#allCitiesDestinations = cities;
+    this.#offers = offers;
 
     this.#tripEventView = new TripEventsView({
       tripEvent,
@@ -35,8 +37,9 @@ export default class TripEventsPresenter {
     this.#tripEditFormView = new EditFormView({
       tripEvent: this.#tripEvent,
       cities: this.#allCitiesDestinations,
+      offers: this.#offers,
       onSubmitEditForm: this.#onSubmitEditForm.bind(this),
-      onClickCloseEditForm: this.#onClickCloseEditForm.bind(this)
+      onClickCloseEditForm: this.#onClickCloseEditForm.bind(this),
     });
 
     render(this.#tripEventView, this.#container);
@@ -85,9 +88,10 @@ export default class TripEventsPresenter {
     this.#switchToEditForm();
   }
 
-  #onSubmitEditForm () {
-    this.#tripEditFormView.reset(this.#tripEvent);
+  #onSubmitEditForm (tripEvent) {
+    this.#tripEditFormView.reset(tripEvent);
     this.#switchToViewForm();
+    this.#tripEventView.reset(tripEvent);
   }
 
   #onClickCloseEditForm() {

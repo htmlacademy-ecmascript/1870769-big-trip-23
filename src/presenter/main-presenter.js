@@ -16,6 +16,7 @@ export default class MainPresenter {
   #tripEventPresenterMap = new Map();
   #tripEvents = [];
   #cities = [];
+  #offers = [];
 
   constructor({ tripEventsModel }) {
     this.tripFilterElement = document.querySelector('.trip-controls__filters');
@@ -28,6 +29,7 @@ export default class MainPresenter {
     this.tripEventsModel = tripEventsModel;
     this.#tripEvents = tripEventsModel.tripEvents;
     this.#cities = tripEventsModel.allCities;
+    this.#offers = tripEventsModel.offers;
   }
 
   init() {
@@ -55,22 +57,24 @@ export default class MainPresenter {
 
   #renderTripEvents() {
     const cities = this.#cities;
+    const offers = this.#offers;
+
     if (this.#tripEvents.length === 0) {
       this.#renderNoTripEventsView();
       return;
     }
 
-    this.#tripEvents.forEach((tripEvent) => this.#renderTripEvent(tripEvent, cities));
+    this.#tripEvents.forEach((tripEvent) => this.#renderTripEvent(tripEvent, cities, offers));
   }
 
-  #renderTripEvent(tripEvent, cities) {
+  #renderTripEvent(tripEvent, cities, offers) {
     const tripEventPresenter = new TripEventPresenter({
       tripEventsElement: this.tripEventsListElement,
       onViewChange: this.#handleViewChange.bind(this),
       onFavoriteClick: this.#handleFavoriteClick.bind(this)
     });
 
-    tripEventPresenter.init(tripEvent, cities);
+    tripEventPresenter.init(tripEvent, cities, offers);
     this.#tripEventPresenterMap.set(tripEvent.id, tripEventPresenter);
   }
 

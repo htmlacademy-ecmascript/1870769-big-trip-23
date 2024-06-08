@@ -21,8 +21,6 @@ const createTripEventsMock = () => {
     is_favorite: getRandomBoolean(),
     offers: [
       getRandomArrayElement(offers).id,
-      getRandomArrayElement(offers).id,
-      getRandomArrayElement(offers).id,
     ],
     type: getRandomArrayElement(TRIP_EVENT_TYPE)
   };

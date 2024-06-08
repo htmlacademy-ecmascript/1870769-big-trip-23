@@ -2,9 +2,9 @@ const DEFAULT_EVENT_TYPE = 'Flight';
 
 const DEFAULT_TRIP_EVENT = {
   type: DEFAULT_EVENT_TYPE,
-  dateFrom: new Date(),
-  dateTo: null,
-  destination: null,
+  dateFrom: '',
+  dateTo: '',
+  destination: '',
   price: 0,
   offers: [],
   isFavorite: false,
