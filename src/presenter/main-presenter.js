@@ -17,6 +17,7 @@ export default class MainPresenter {
   #tripEvents = [];
   #cities = [];
   #offers = [];
+  #destinations = [];
 
   constructor({ tripEventsModel }) {
     this.tripFilterElement = document.querySelector('.trip-controls__filters');
@@ -30,6 +31,7 @@ export default class MainPresenter {
     this.#tripEvents = tripEventsModel.tripEvents;
     this.#cities = tripEventsModel.allCities;
     this.#offers = tripEventsModel.offers;
+    this.#destinations = tripEventsModel.destinations;
   }
 
   init() {
@@ -58,23 +60,24 @@ export default class MainPresenter {
   #renderTripEvents() {
     const cities = this.#cities;
     const offers = this.#offers;
+    const destinations = this.#destinations;
 
     if (this.#tripEvents.length === 0) {
       this.#renderNoTripEventsView();
       return;
     }
 
-    this.#tripEvents.forEach((tripEvent) => this.#renderTripEvent(tripEvent, cities, offers));
+    this.#tripEvents.forEach((tripEvent) => this.#renderTripEvent(tripEvent, cities, offers, destinations));
   }
 
-  #renderTripEvent(tripEvent, cities, offers) {
+  #renderTripEvent(tripEvent, cities, offers, destinations) {
     const tripEventPresenter = new TripEventPresenter({
       tripEventsElement: this.tripEventsListElement,
       onViewChange: this.#handleViewChange.bind(this),
       onFavoriteClick: this.#handleFavoriteClick.bind(this)
     });
 
-    tripEventPresenter.init(tripEvent, cities, offers);
+    tripEventPresenter.init(tripEvent, cities, offers, destinations);
     this.#tripEventPresenterMap.set(tripEvent.id, tripEventPresenter);
   }
 
@@ -86,7 +89,7 @@ export default class MainPresenter {
   #handleSortTypeChange = (sortType) => {
     this.#currentSortType = sortType;
     this.#clearTripEventsList();
-    this.#sortType(sortType);
+    this.#sortType(this.#currentSortType);
     this.#renderTripEvents();
   };
 

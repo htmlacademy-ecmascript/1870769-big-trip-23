@@ -12,6 +12,7 @@ export default class TripEventsPresenter {
   #tripEvent = null;
   #allCitiesDestinations = [];
   #offers = [];
+  #destinations = [];
 
   #onViewChange = null;
   #onFavoriteClick = null;
@@ -23,10 +24,11 @@ export default class TripEventsPresenter {
     this.#onFavoriteClick = onFavoriteClick;
   }
 
-  init(tripEvent, cities, offers) {
+  init(tripEvent, cities, offers, destinations) {
     this.#tripEvent = tripEvent;
     this.#allCitiesDestinations = cities;
     this.#offers = offers;
+    this.#destinations = destinations;
 
     this.#tripEventView = new TripEventsView({
       tripEvent,
@@ -38,6 +40,7 @@ export default class TripEventsPresenter {
       tripEvent: this.#tripEvent,
       cities: this.#allCitiesDestinations,
       offers: this.#offers,
+      destinations: this.#destinations,
       onSubmitEditForm: this.#onSubmitEditForm.bind(this),
       onClickCloseEditForm: this.#onClickCloseEditForm.bind(this),
     });
