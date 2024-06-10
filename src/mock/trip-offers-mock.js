@@ -5,8 +5,10 @@ const tripOffers = ['Travel by train', 'Choose seats', 'Add meal', 'Switch to co
 const createTripOffer = () => ({
   id: getId(),
   title: getRandomArrayElement(tripOffers),
-  price: getRandomInt(300),
+  price: getRandomInt(500),
+  isChecked: false,
 });
-const offers = new Array(6).fill(null).map(createTripOffer);
+
+const offers = new Array(4).fill(null).map(createTripOffer);
 
 export { offers };

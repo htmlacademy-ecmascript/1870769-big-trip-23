@@ -1,4 +1,4 @@
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 
 const generateOfferHTML = (offers) => offers.map((offer) => `
   <li class="event__offer">
@@ -10,7 +10,7 @@ const generateOfferHTML = (offers) => offers.map((offer) => `
 const createTripEventsView = ({
   type,
   eventDate,
-  eventTitle: {eventCity},
+  destination,
   offers,
   eventSchedule: {dateFrom, dateTo, eventDuration},
   basePrice,
@@ -23,9 +23,9 @@ const createTripEventsView = ({
       <div class="event">
         <time class="event__date" datetime=${eventDate}>${eventDate}</time>
         <div class="event__type">
-          <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
+          <img class="event__type-icon" width="42" height="42" src="img/icons/${type.toLowerCase()}.png" alt="Event type icon">
         </div>
-        <h3 class="event__title">${type} ${eventCity}</h3>
+        <h3 class="event__title">${type} ${destination.name}</h3>
         <div class="event__schedule">
           <p class="event__time">
             <time class="event__start-time" datetime=${dateFrom}>${dateFrom}</time>
@@ -55,25 +55,30 @@ const createTripEventsView = ({
   </ul>`;
 };
 
-export default class TripEventsView extends AbstractView {
+export default class TripEventsView extends AbstractStatefulView {
   #eventRollupBtnElement = null;
   #eventFavoritBtnElement = null;
   #clickFavoritBtn = null;
   #clickOpenHandler = null;
-  #tripEvent = null;
 
   constructor({ tripEvent, onOpenEdit, onFavoritClick }) {
     super();
-    this.#tripEvent = tripEvent;
+    this._setState(tripEvent);
 
     this.#clickOpenHandler = onOpenEdit;
     this.#clickFavoritBtn = onFavoritClick;
 
-    this.#bindEventHandlers();
+    this._restoreHandlers();
   }
 
   get template() {
-    return createTripEventsView(this.#tripEvent);
+    return createTripEventsView(this._state);
+  }
+
+  reset(tripEvent) {
+    this.updateElement(
+      tripEvent
+    );
   }
 
   removeElement() {
@@ -81,7 +86,7 @@ export default class TripEventsView extends AbstractView {
     this.#unbindEventHandlers();
   }
 
-  #bindEventHandlers() {
+  _restoreHandlers() {
     this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
     this.#eventFavoritBtnElement = this.element.querySelector('.event__favorite-btn');
 
@@ -101,6 +106,6 @@ export default class TripEventsView extends AbstractView {
 
   #onFavoritClickHandler = (evt) => {
     evt.preventDefault();
-    this.#clickFavoritBtn(this.#tripEvent);
+    this.#clickFavoritBtn(this._state);
   };
 }

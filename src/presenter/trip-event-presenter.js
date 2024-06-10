@@ -10,9 +10,13 @@ export default class TripEventsPresenter {
   #tripEditFormView = null;
 
   #tripEvent = null;
-  #onViewChange = null;
+  #allCitiesDestinations = [];
+  #offers = [];
+  #destinations = [];
 
+  #onViewChange = null;
   #onFavoriteClick = null;
+  #escKeydownHandler = null;
 
   constructor({ tripEventsElement, onViewChange, onFavoriteClick }) {
     this.#container = tripEventsElement;
@@ -20,8 +24,11 @@ export default class TripEventsPresenter {
     this.#onFavoriteClick = onFavoriteClick;
   }
 
-  init(tripEvent) {
+  init(tripEvent, cities, offers, destinations) {
     this.#tripEvent = tripEvent;
+    this.#allCitiesDestinations = cities;
+    this.#offers = offers;
+    this.#destinations = destinations;
 
     this.#tripEventView = new TripEventsView({
       tripEvent,
@@ -31,8 +38,11 @@ export default class TripEventsPresenter {
 
     this.#tripEditFormView = new EditFormView({
       tripEvent: this.#tripEvent,
+      cities: this.#allCitiesDestinations,
+      offers: this.#offers,
+      destinations: this.#destinations,
       onSubmitEditForm: this.#onSubmitEditForm.bind(this),
-      onClickCloseEditForm: this.#onClickCloseEditForm.bind(this)
+      onClickCloseEditForm: this.#onClickCloseEditForm.bind(this),
     });
 
     render(this.#tripEventView, this.#container);
@@ -45,17 +55,21 @@ export default class TripEventsPresenter {
 
   resetView() {
     if (this.#openedTripEvent.length > 0) {
+      this.#tripEditFormView.reset(this.#tripEvent);
       this.#switchToViewForm();
     }
   }
 
   #switchToViewForm = () => {
     if (this.#openedTripEvent.length > 0) {
-      const [editFormComponent, eventViewComponent, escHandler] = this.#openedTripEvent;
+      const [editFormComponent, eventViewComponent] = this.#openedTripEvent;
 
       if (editFormComponent && eventViewComponent) {
         replace(eventViewComponent, editFormComponent);
-        document.removeEventListener('keydown', escHandler);
+        if (this.#escKeydownHandler) {
+          document.removeEventListener('keydown', this.#escKeydownHandler);
+          this.#escKeydownHandler = null;
+        }
         this.#openedTripEvent = [];
       }
     }
@@ -69,24 +83,29 @@ export default class TripEventsPresenter {
     this.#onViewChange();
     this.#openedTripEvent = [this.#tripEditFormView, this.#tripEventView, this.#onEscKeydown.bind(this)];
     replace(this.#tripEditFormView, this.#tripEventView);
-    document.addEventListener('keydown', this.#onEscKeydown.bind(this));
+    this.#escKeydownHandler = this.#onEscKeydown.bind(this);
+    document.addEventListener('keydown', this.#escKeydownHandler);
   };
 
   #onClickOpenEditForm() {
     this.#switchToEditForm();
   }
 
-  #onSubmitEditForm () {
+  #onSubmitEditForm (tripEvent) {
+    this.#tripEditFormView.reset(tripEvent);
     this.#switchToViewForm();
+    this.#tripEventView.reset(tripEvent);
   }
 
   #onClickCloseEditForm() {
+    this.#tripEditFormView.reset(this.#tripEvent);
     this.#switchToViewForm();
   }
 
   #onEscKeydown(evt) {
     if (evt.key === 'Escape') {
       evt.preventDefault();
+      this.#tripEditFormView.reset(this.#tripEvent);
       this.#switchToViewForm();
     }
   }

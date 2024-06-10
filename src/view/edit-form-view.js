@@ -1,4 +1,4 @@
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { DateFormats, TRIP_EVENT_TYPE } from '../const.js';
 import dayjs from 'dayjs';
 
@@ -12,80 +12,97 @@ const generateEventTypeItem = (type) => `
 </div>
 `;
 
-const lastWords = (offerTitle) => {
-  const words = offerTitle.split(' ');
-  return words[words.length - 1];
-};
+const generateOfferHTML = (allOffers, isAnyOffers) => {
+  const words = allOffers[0].title.split(' ');
+  const lastWord = words[words.length - 1];
+  let count = 0;
 
-const generateOfferHTML = (offers) => {
-  const lastWord = lastWords(offers.offerTitle);
-
-  return `
+  if (isAnyOffers) {
+    return allOffers.map((offer) => {
+      count++;
+      return `
 <div class="event__offer-selector">
-  <input class="event__offer-checkbox visually-hidden" id="event-offer-${lastWord}-1"
+  <input class="event__offer-checkbox visually-hidden"
+   id="event-offer-${offer.id}-${count}"
+   ${offer.isChecked ? 'checked' : ''}
   type="checkbox" name="event-offer-${lastWord}">
-  <label class="event__offer-label" for="event-offer-${lastWord}-1">
-    <span class="event__offer-title">${offers.offerTitle}</span>
+  <label class="event__offer-label" for="event-offer-${offer.id}-${count}">
+    <span class="event__offer-title">${offer.title}</span>
     &plus;&euro;&nbsp;
-    <span class="event__offer-price">${offers.offerPrice}</span>
+    <span class="event__offer-price">${offer.price}</span>
   </label>
 </div>
 `;
+    }).join('');
+  } else {
+    return '';
+  }
 };
 
 const createPhotoTape = (pictures) => `
     <div class="event__photos-container">
       <div class="event__photos-tape">
-       <img class="event__photo" src="${pictures.src}" alt="${pictures.description}">
+       <img class="event__photo" src="${pictures}" alt="${pictures.description}">
       </div>
     </div>`;
 
-const createSectionDestination = ({ description, picture }) => `
+const createSectionDestination = ({description, src}) => `
  <section class="event__section  event__section--destination">
   <h3 class="event__section-title  event__section-title--destination">Destination</h3>
   <p class="event__destination-description">${description}</p>
-  ${createPhotoTape(picture)}
+  ${createPhotoTape(src)}
 </section>`;
+
+const generateEventFieldDestination = (type, name, allCities) => {
+  const cityOptions = allCities.map((cityName) => `<option value="${cityName}"></option>`).join('');
+
+  return (`
+  <label class="event__label  event__type-output" for="event-destination-1">
+    ${type}
+  </label>
+  <input class="event__input  event__input--destination" id="event-destination-1"
+  type="text" name="event-destination" value="${name}" list="destination-list-1">
+  <datalist id="destination-list-1">
+  ${cityOptions}
+  </datalist>
+`);
+};
 
 const createEditFormView = ({
   type,
-  eventTitle: {destination, eventCity},
+  destination,
   eventDate,
   eventSchedule: {dateFrom, dateTo},
-  offers,
+  allOffers,
+  isAnyOffers,
   basePrice,
+  allCities,
 }) => {
   const { DATE_TIME } = DateFormats;
-  const offersHTML = offers.map(generateOfferHTML).join('');
+  const offersHTML = generateOfferHTML(allOffers, isAnyOffers);
+  const { picture, name } = destination;
 
   return `
+  <li class="trip-events__item">
     <form class="event event--edit" action="#" method="post">
       <header class="event__header">
         <div class="event__type-wrapper">
           <label class="event__type  event__type-btn" for="event-type-toggle-1">
             <span class="visually-hidden">Choose event type</span>
-            <img class="event__type-icon" width="17" height="17" src="img/icons/${type}.png" alt="Event type icon">
+            <img class="event__type-icon" width="17" height="17"
+             src="img/icons/${type.toLowerCase()}.png" alt="Event type icon">
           </label>
           <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox">
           <div class="event__type-list">
             <fieldset class="event__type-group">
               <legend class="visually-hidden">Event type</legend>
-              ${TRIP_EVENT_TYPE.map((eventType) => generateEventTypeItem(eventType, type === eventType)).join('')}
+              ${TRIP_EVENT_TYPE.map((eventType) => generateEventTypeItem(eventType, type === eventType)).join('  ')}
             </fieldset>
           </div>
         </div>
 
         <div class="event__field-group  event__field-group--destination">
-          <label class="event__label  event__type-output" for="event-destination-1">
-          ${type}
-          </label>
-          <input class="event__input  event__input--destination" id="event-destination-1"
-           type="text" name="event-destination" value=${eventCity} list="destination-list-1">
-          <datalist id="destination-list-1">
-            <option value=${eventCity}></option>
-            <option value="Geneva"></option>
-            <option value="Chamonix"></option>
-          </datalist>
+          ${generateEventFieldDestination(type, name, allCities)}
         </div>
 
         <div class="event__field-group  event__field-group--time">
@@ -119,54 +136,72 @@ const createEditFormView = ({
           <h3 class="event__section-title  event__section-title--offers">Offers</h3>
           <div class="event__available-offers">
             ${offersHTML}
+          </div>
         </section>
-
-        ${createSectionDestination(destination)}
+        ${createSectionDestination(picture)}
       </section>
     </form>
+    </li>
 `;
 };
 
-export default class EditFormView extends AbstractView {
+export default class EditFormView extends AbstractStatefulView {
   #closeForm = null;
   #submitForm = null;
-  #tripEvent = null;
 
-  constructor({ tripEvent, onClickCloseEditForm, onSubmitEditForm }) {
+  constructor({
+    tripEvent,
+    onClickCloseEditForm,
+    onSubmitEditForm,
+    cities,
+    offers,
+    destinations
+  }) {
     super();
-    this.#tripEvent = tripEvent;
+
+    this._setState({
+      ...EditFormView.parseListElementToState(tripEvent),
+      allOffers: offers,
+      allCities: cities,
+      destinations: destinations
+    });
 
     this.#closeForm = onClickCloseEditForm;
     this.#submitForm = onSubmitEditForm;
 
-    this.#bindEventHandlers();
+    this._restoreHandlers();
   }
 
   get template() {
-    return createEditFormView(this.#tripEvent);
+    return createEditFormView(this._state);
   }
 
-  removeElement() {
-    super.removeElement();
-    this.#unbindEventHandlers();
+  reset(tripEvent) {
+    this.updateElement(
+      EditFormView.parseListElementToState(tripEvent)
+    );
   }
 
-  #bindEventHandlers() {
+  _restoreHandlers() {
     this.element.querySelector('.event__rollup-btn')
       .addEventListener('click', this.#onCloseHandler);
+
     this.element.querySelector('.event__reset-btn')
       .addEventListener('click', this.#onCloseHandler);
-    this.element.querySelector('.event__save-btn')
+
+    this.element.querySelector('form')
       .addEventListener('submit', this.#onSubmitHandler);
-  }
 
-  #unbindEventHandlers() {
-    this.element.querySelector('.event__rollup-btn')
-      .removeEventListener('click', this.#onCloseHandler);
-    this.element.querySelector('.event__reset-btn')
-      .removeEventListener('click', this.#onCloseHandler);
-    this.element.querySelector('.event__save-btn')
-      .removeEventListener('submit', this.#onSubmitHandler);
+    this.element.querySelector('.event__input--destination')
+      .addEventListener('change', this.#onDestinationInputHandler);
+
+    this.element.querySelector('.event__type-group')
+      .addEventListener('input', this.#eventTypeToggleHandler);
+
+    if (this._state.offers.length !== 0) {
+      this.element.querySelector('.event__available-offers')
+        .addEventListener('click', this.#offersChangeToggleHandler);
+    }
   }
 
   #onCloseHandler = (evt) => {
@@ -176,7 +211,118 @@ export default class EditFormView extends AbstractView {
 
   #onSubmitHandler = (evt) => {
     evt.preventDefault();
-    this.#submitForm();
-    this.#closeForm();
+    this.#submitForm(EditFormView.parseStateToListElement(this._state));
   };
+
+  #onDestinationInputHandler = (evt) => {
+    evt.preventDefault();
+    const selectedDestination = this._state.destinations.find((destination) => destination.name === evt.target.value);
+
+    this._setState({
+      destination: selectedDestination
+    });
+
+    this.updateElement({
+      destination: selectedDestination
+    });
+  };
+
+  #eventTypeToggleHandler = (evt) => {
+    evt.preventDefault();
+
+    if (evt.target.value !== undefined) {
+      const newEventType = evt.target.value;
+      const newOffers = this.#getOffersByType(newEventType);
+
+      this._setState({
+        type: newEventType,
+        allOffers: newOffers
+      });
+
+      this.updateElement({
+        type: newEventType,
+        allOffers: newOffers
+      });
+    }
+  };
+
+  #getOffersByType(type) {
+    const allOffers = {
+      'taxi': [
+        { id: 1, title: 'Upgrade to a business class', price: 50, isChecked: false },
+        { id: 2, title: 'Choose the radio station', price: 10, isChecked: false },
+      ],
+      'bus': [
+        { id: 3, title: 'Infotainment system', price: 5, isChecked: false },
+        { id: 4, title: 'Comfortable seats', price: 15, isChecked: false },
+      ],
+      'train': [
+        { id: 5, title: 'Meal', price: 10, isChecked: false },
+        { id: 6, title: 'Wifi', price: 5, isChecked: false },
+      ],
+      'ship': [
+        { id: 7, title: 'Private cabin', price: 100, isChecked: false },
+        { id: 8, title: 'Tour guide', price: 50, isChecked: false },
+      ],
+      'drive': [
+        { id: 9, title: 'GPS', price: 20, isChecked: false },
+        { id: 10, title: 'Child seat', price: 10, isChecked: false },
+      ],
+      'flight': [
+        { id: 11, title: 'Add luggage', price: 30, isChecked: false },
+        { id: 12, title: 'Premium seat', price: 100, isChecked: false },
+      ],
+      'check-in': [
+        { id: 13, title: 'Early check-in', price: 20, isChecked: false },
+        { id: 14, title: 'Late check-out', price: 20, isChecked: false },
+      ],
+      'sightseeing': [
+        { id: 15, title: 'Local guide', price: 40, isChecked: false },
+        { id: 16, title: 'Skip-the-line', price: 30, isChecked: false },
+      ],
+      'restaurant': [
+        { id: 17, title: 'Vegetarian option', price: 15, isChecked: false },
+        { id: 18, title: 'VIP area', price: 70, isChecked: false },
+      ],
+    };
+
+    return allOffers[type] || [];
+  }
+
+  #offersChangeToggleHandler = () => {
+    const elements = this.element.querySelectorAll('.event__offer-checkbox');
+
+    for(let i = 0; i < this._state.offers.length; i++) {
+      if(elements[i].checked) {
+        this._state.offers[i].isChecked = true;
+        this._state.isAnyOffers = true;
+      } else {
+        this._state.offers[i].isChecked = false;
+      }
+    }
+
+    this._setState({
+      allOffers: this._state.offers
+    });
+  };
+
+  static parseListElementToState(tripEvent) {
+    return {...tripEvent,
+      isAnyOffers: tripEvent.offers.length !== 0,
+    };
+  }
+
+  static parseStateToListElement(state) {
+    const tripEvent = {...state};
+
+    if (!tripEvent.isAnyOffers) {
+      tripEvent.offers.forEach((offer) => {
+        offer.isFavorite = false;
+      });
+    }
+
+    delete tripEvent.isAnyOffers;
+
+    return tripEvent;
+  }
 }
