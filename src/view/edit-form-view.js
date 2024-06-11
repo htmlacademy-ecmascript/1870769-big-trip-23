@@ -1,6 +1,9 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
-import { DateFormats, TRIP_EVENT_TYPE } from '../const.js';
+import { DateFormats, TRIP_EVENT_TYPE, DefaultFlatpickrConfig } from '../const.js';
 import dayjs from 'dayjs';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+
 
 const generateEventTypeItem = (type) => `
 <div class="event__type-item">
@@ -148,6 +151,8 @@ const createEditFormView = ({
 export default class EditFormView extends AbstractStatefulView {
   #closeForm = null;
   #submitForm = null;
+  #dateFromPicker = null;
+  #dateToPicker = null;
 
   constructor({
     tripEvent,
@@ -182,6 +187,12 @@ export default class EditFormView extends AbstractStatefulView {
     );
   }
 
+  removeElement() {
+    super.removeElement();
+    this.#dateFromPicker.destroy();
+    this.#dateToPicker.destroy();
+  }
+
   _restoreHandlers() {
     this.element.querySelector('.event__rollup-btn')
       .addEventListener('click', this.#onCloseHandler);
@@ -202,7 +213,37 @@ export default class EditFormView extends AbstractStatefulView {
       this.element.querySelector('.event__available-offers')
         .addEventListener('click', this.#offersChangeToggleHandler);
     }
+
+    this.#setDatePickers({
+      startTimeElement: this.element.querySelector('#event-start-time-1'),
+      endTimeElement: this.element.querySelector('#event-end-time-1')
+    });
   }
+
+  #setDatePickers = ({ startTimeElement, endTimeElement }) => {
+    this.#dateFromPicker = flatpickr(
+      startTimeElement,
+      {
+        ...DefaultFlatpickrConfig,
+        defaultDate: this._state.eventSchedule.dateFrom,
+        maxDate: this._state.eventSchedule.dateTo,
+        onClose: this.#onDateFromChange,
+      },
+    );
+
+    this.#dateToPicker = flatpickr(
+      endTimeElement,
+      {
+        ...DefaultFlatpickrConfig,
+        defaultDate: this._state.eventSchedule.dateTo,
+        minDate: this._state.eventSchedule.dateFrom,
+        onClose: this.#onDateToChange,
+      },
+    );
+  };
+
+  #onDateFromChange = ([dateFrom]) => this.updateElement({ dateFrom });
+  #onDateToChange = ([dateTo]) => this.updateElement({ dateTo });
 
   #onCloseHandler = (evt) => {
     evt.preventDefault();

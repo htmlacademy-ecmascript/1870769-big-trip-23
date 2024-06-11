@@ -22,7 +22,13 @@ const DateFormats = {
   DATE_TIME: 'YY/MM/DD',
   DAY: 'DD[d] HH[h] mm[m]',
   HOURS: 'HH[h] mm[m]',
-  MINUTES: 'mm[m]'
+  MINUTES: 'mm[m]',
+  FLATPICKR: 'D/M/Y h:m',
+};
+
+const DefaultFlatpickrConfig = {
+  dateFormat: DateFormats.FLATPICKR,
+  enableTime: true,
 };
 
 const SortTypes = {
@@ -53,5 +59,6 @@ export {
   DEFAULT_TRIP_EVENT,
   SortTypes,
   Filters,
-  NoTripEventMessages
+  NoTripEventMessages,
+  DefaultFlatpickrConfig
 };
