@@ -42,6 +42,10 @@ export default class MainPresenter {
     this.#renderTripEvents();
   }
 
+  get tripEevent() {
+    return this.#tripEvents;
+  }
+
   #renderFilterView({ filters }) {
     render(new FilterView({ filters }), this.tripFilterElement, RenderPosition.BEFOREBEGIN);
   }

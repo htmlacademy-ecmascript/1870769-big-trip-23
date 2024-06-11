@@ -4,6 +4,7 @@ import { destionations } from '../mock/trip-destinations-mock.js';
 import { DateFormats, Filters, SortTypes } from '../const.js';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration.js';
+import Observable from '../framework/observable.js';
 
 const {TIME, DATE_MONTH} = DateFormats;
 
@@ -23,7 +24,7 @@ const formatDuration = (stopDuration) => {
   }
 };
 
-export class TripEventModel {
+export class TripEventModel extends Observable {
   #offers = [];
   #destinations = [];
   tripEvents = [];
@@ -31,6 +32,8 @@ export class TripEventModel {
   #sortTypes = [];
 
   constructor() {
+    super();
+
     this.#offers = this.offers;
     this.#destinations = this.destinations;
     this.tripEvents = this.events;
