@@ -40,6 +40,13 @@ const sortingEventsByPrice = (tripA, tripB) => tripB.basePrice - tripA.basePrice
 
 const sortingEventsByTime = (tripA, tripB) => tripB.durationInMinutes - tripA.durationInMinutes;
 
+function isTripEventHaveOffers(tripEvent) {
+  return tripEvent.length !== 0;
+}
+function isDatesEqual(dateA, dateB) {
+  return (dateA === null && dateB === null) || dayjs(dateA).isSame(dateB, 'D');
+}
+
 export {
   getRandomArrayElement,
   getRandomBoolean,
@@ -50,6 +57,8 @@ export {
   updateItem,
   sortingEventsByDate,
   sortingEventsByPrice,
-  sortingEventsByTime
+  sortingEventsByTime,
+  isDatesEqual,
+  isTripEventHaveOffers,
 };
 

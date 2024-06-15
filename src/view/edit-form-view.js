@@ -18,25 +18,21 @@ const generateEventTypeItem = (type) => `
 const generateOfferHTML = (allOffers, isAnyOffers) => {
   const words = allOffers[0].title.split(' ');
   const lastWord = words[words.length - 1];
-  let count = 0;
 
   if (isAnyOffers) {
-    return allOffers.map((offer) => {
-      count++;
-      return `
+    return allOffers.map((offer) => `
 <div class="event__offer-selector">
   <input class="event__offer-checkbox visually-hidden"
-   id="event-offer-${offer.id}-${count}"
+   id="event-offer-${offer.id}"
    ${offer.isChecked ? 'checked' : ''}
   type="checkbox" name="event-offer-${lastWord}">
-  <label class="event__offer-label" for="event-offer-${offer.id}-${count}">
+  <label class="event__offer-label" for="event-offer-${offer.id}">
     <span class="event__offer-title">${offer.title}</span>
     &plus;&euro;&nbsp;
     <span class="event__offer-price">${offer.price}</span>
   </label>
 </div>
-`;
-    }).join('');
+`).join('');
   } else {
     return '';
   }
@@ -76,13 +72,13 @@ const createEditFormView = ({
   destination,
   eventDate,
   eventSchedule: {dateFrom, dateTo},
-  allOffers,
+  offers,
   isAnyOffers,
   basePrice,
   allCities,
 }) => {
   const { DATE_TIME } = DateFormats;
-  const offersHTML = generateOfferHTML(allOffers, isAnyOffers);
+  const offersHTML = generateOfferHTML(offers, isAnyOffers);
   const { picture, name } = destination;
 
   return `
@@ -151,6 +147,7 @@ const createEditFormView = ({
 export default class EditFormView extends AbstractStatefulView {
   #closeForm = null;
   #submitForm = null;
+  #deleteForm = null;
   #dateFromPicker = null;
   #dateToPicker = null;
 
@@ -158,21 +155,23 @@ export default class EditFormView extends AbstractStatefulView {
     tripEvent,
     onClickCloseEditForm,
     onSubmitEditForm,
+    onClickDeleteEditForm,
     cities,
     offers,
-    destinations
+    destinations,
   }) {
     super();
 
     this._setState({
-      ...EditFormView.parseListElementToState(tripEvent),
-      allOffers: offers,
+      ...EditFormView.parseTripEventToState(tripEvent),
+      offers: offers,
       allCities: cities,
       destinations: destinations
     });
 
     this.#closeForm = onClickCloseEditForm;
     this.#submitForm = onSubmitEditForm;
+    this.#deleteForm = onClickDeleteEditForm;
 
     this._restoreHandlers();
   }
@@ -183,14 +182,20 @@ export default class EditFormView extends AbstractStatefulView {
 
   reset(tripEvent) {
     this.updateElement(
-      EditFormView.parseListElementToState(tripEvent)
+      EditFormView.parseTripEventToState(tripEvent)
     );
   }
 
   removeElement() {
     super.removeElement();
-    this.#dateFromPicker.destroy();
-    this.#dateToPicker.destroy();
+    if (this.#dateFromPicker) {
+      this.#dateFromPicker.destroy();
+      this.#dateFromPicker = null;
+    }
+    if (this.#dateToPicker) {
+      this.#dateToPicker.destroy();
+      this.#dateToPicker = null;
+    }
   }
 
   _restoreHandlers() {
@@ -198,7 +203,7 @@ export default class EditFormView extends AbstractStatefulView {
       .addEventListener('click', this.#onCloseHandler);
 
     this.element.querySelector('.event__reset-btn')
-      .addEventListener('click', this.#onCloseHandler);
+      .addEventListener('click', this.#onDeleteHandler);
 
     this.element.querySelector('form')
       .addEventListener('submit', this.#onSubmitHandler);
@@ -242,17 +247,29 @@ export default class EditFormView extends AbstractStatefulView {
     );
   };
 
-  #onDateFromChange = ([dateFrom]) => this.updateElement({ dateFrom });
-  #onDateToChange = ([dateTo]) => this.updateElement({ dateTo });
+  #onDateFromChange = ([dateFrom]) => {
+    const from = dayjs(dateFrom).format(DateFormats.TIME);
+    this.updateElement({ eventSchedule: { ...this._state.eventSchedule, dateFrom: from } });
+  };
+
+  #onDateToChange = ([dateTo]) => {
+    const to = dayjs(dateTo).format(DateFormats.TIME);
+    this.updateElement({ eventSchedule: { ...this._state.eventSchedule, dateTo: to } });
+  };
 
   #onCloseHandler = (evt) => {
     evt.preventDefault();
     this.#closeForm();
   };
 
+  #onDeleteHandler = (evt) => {
+    evt.preventDefault();
+    this.#deleteForm(this._state);
+  };
+
   #onSubmitHandler = (evt) => {
     evt.preventDefault();
-    this.#submitForm(EditFormView.parseStateToListElement(this._state));
+    this.#submitForm(EditFormView.parseStateToTripEvent(this._state));
   };
 
   #onDestinationInputHandler = (evt) => {
@@ -277,12 +294,12 @@ export default class EditFormView extends AbstractStatefulView {
 
       this._setState({
         type: newEventType,
-        allOffers: newOffers
+        offers: newOffers
       });
 
       this.updateElement({
         type: newEventType,
-        allOffers: newOffers
+        offers: newOffers
       });
     }
   };
@@ -330,30 +347,39 @@ export default class EditFormView extends AbstractStatefulView {
     return allOffers[type] || [];
   }
 
-  #offersChangeToggleHandler = () => {
-    const elements = this.element.querySelectorAll('.event__offer-checkbox');
+  #offersChangeToggleHandler = (evt) => {
+    if (evt.target.classList.contains('event__offer-checkbox')) {
+      const offerId = evt.target.id.split('-').slice(2).join('-');
+      const foundOffer = this._state.offers.find((offer) => offer.id === offerId);
 
-    for(let i = 0; i < this._state.offers.length; i++) {
-      if(elements[i].checked) {
-        this._state.offers[i].isChecked = true;
-        this._state.isAnyOffers = true;
-      } else {
-        this._state.offers[i].isChecked = false;
+      if (foundOffer === undefined) {
+        return;
       }
-    }
 
-    this._setState({
-      allOffers: this._state.offers
-    });
+      const newOffers = this._state.offers.map((offer) => {
+        if (offer.id === offerId) {
+          return {
+            ...offer,
+            isChecked: !offer.isChecked
+          };
+        }
+        return offer;
+      });
+
+      this._setState({
+        offers: newOffers,
+        isAnyOffers: newOffers.some((offer) => offer.isChecked)
+      });
+    }
   };
 
-  static parseListElementToState(tripEvent) {
+  static parseTripEventToState(tripEvent) {
     return {...tripEvent,
       isAnyOffers: tripEvent.offers.length !== 0,
     };
   }
 
-  static parseStateToListElement(state) {
+  static parseStateToTripEvent(state) {
     const tripEvent = {...state};
 
     if (!tripEvent.isAnyOffers) {

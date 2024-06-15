@@ -47,14 +47,6 @@ export class TripEventModel extends Observable {
       const eventDuration = dayjs.duration(dayjs(tripEvent.date_to).diff(dayjs(tripEvent.date_from)));
       const destination = this.#destinations.find((_destination) => _destination.id === tripEvent.destination);
 
-      const eventOffers = tripEvent.offers.map((offerId) => {
-        const offer = this.#offers.find((_offer) => _offer.id === offerId);
-        return {
-          offerTitle: offer.title,
-          offerPrice: offer.price,
-        };
-      });
-
       return {
         id: tripEvent.id,
         eventDate: dayjs(tripEvent.date_from).format(DATE_MONTH),
@@ -66,11 +58,51 @@ export class TripEventModel extends Observable {
           eventDuration: formatDuration(eventDuration),
         },
         durationInMinutes: eventDuration.asMinutes(),
-        offers: eventOffers,
+        offers: tripEvent.offers,
         basePrice: tripEvent.base_price,
         isFavorite: tripEvent.is_favorite,
       };
     });
+  }
+
+  updateEvent(updateType, update) {
+    const index = this.tripEvents.findIndex((tripEvent) => tripEvent.id === update.id);
+
+    if (index === -1) {
+      throw new Error('Can\'t update unexisting Event');
+    }
+
+    this.tripEvents = [
+      ...this.tripEvents.slice(0, index),
+      update,
+      ...this.tripEvents.slice(index + 1),
+    ];
+
+    this._notify(updateType, update);
+  }
+
+  addEvent(updateType, update) {
+    this.tripEvents = [
+      update,
+      ...this.tripEvents,
+    ];
+
+    this._notify(updateType, update);
+  }
+
+  deleteEvent(updateType, update) {
+    const index = this.tripEvents.findIndex((event) => event.id === update.id);
+
+    if (index === -1) {
+      throw new Error('Can\'t delete unexisting event');
+    }
+
+    this.tripEvents = [
+      ...this.tripEvents.slice(0, index),
+      ...this.tripEvents.slice(index + 1),
+    ];
+
+    this._notify(updateType);
   }
 
   // TODO: заменить на запрос к серверу
