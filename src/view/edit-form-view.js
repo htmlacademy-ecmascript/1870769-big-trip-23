@@ -1,9 +1,9 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
-import { DateFormats, TRIP_EVENT_TYPE, DefaultFlatpickrConfig } from '../const.js';
+import { DateFormats, TRIP_EVENT_TYPE, DefaultFlatpickrConfig, DEFAULT_TRIP_EVENT } from '../const.js';
 import dayjs from 'dayjs';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-
+import he from 'he';
 
 const generateEventTypeItem = (type) => `
 <div class="event__type-item">
@@ -19,22 +19,24 @@ const generateOfferHTML = (allOffers, isAnyOffers) => {
   const words = allOffers[0].title.split(' ');
   const lastWord = words[words.length - 1];
 
-  if (isAnyOffers) {
-    return allOffers.map((offer) => `
-<div class="event__offer-selector">
-  <input class="event__offer-checkbox visually-hidden"
-   id="event-offer-${offer.id}"
-   ${offer.isChecked ? 'checked' : ''}
-  type="checkbox" name="event-offer-${lastWord}">
-  <label class="event__offer-label" for="event-offer-${offer.id}">
-    <span class="event__offer-title">${offer.title}</span>
-    &plus;&euro;&nbsp;
-    <span class="event__offer-price">${offer.price}</span>
-  </label>
-</div>
-`).join('');
-  } else {
-    return '';
+  if (allOffers) {
+    if (isAnyOffers) {
+      return allOffers.map((offer) => `
+        <div class="event__offer-selector">
+          <input class="event__offer-checkbox visually-hidden"
+          id="event-offer-${offer.id}"
+          ${offer.isChecked ? 'checked' : ''}
+          type="checkbox" name="event-offer-${lastWord}">
+          <label class="event__offer-label" for="event-offer-${offer.id}">
+            <span class="event__offer-title">${offer.title}</span>
+            &plus;&euro;&nbsp;
+            <span class="event__offer-price">${offer.price}</span>
+          </label>
+        </div>
+    `).join('');
+    } else {
+      return '';
+    }
   }
 };
 
@@ -62,7 +64,7 @@ const generateEventFieldDestination = (type, name, allCities) => {
   <input class="event__input  event__input--destination" id="event-destination-1"
   type="text" name="event-destination" value="${name}" list="destination-list-1">
   <datalist id="destination-list-1">
-  ${cityOptions}
+  ${he.encode(cityOptions)}
   </datalist>
 `);
 };
@@ -152,7 +154,7 @@ export default class EditFormView extends AbstractStatefulView {
   #dateToPicker = null;
 
   constructor({
-    tripEvent,
+    tripEvent = DEFAULT_TRIP_EVENT,
     onClickCloseEditForm,
     onSubmitEditForm,
     onClickDeleteEditForm,

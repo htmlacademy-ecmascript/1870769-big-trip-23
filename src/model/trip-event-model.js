@@ -1,34 +1,20 @@
 import { tripEvents } from '../mock/trip-events-mock.js';
 import { offers } from '../mock/trip-offers-mock.js';
 import { destionations } from '../mock/trip-destinations-mock.js';
-import { DateFormats, Filters, SortTypes } from '../const.js';
+import { DateFormats, SortTypes } from '../const.js';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration.js';
 import Observable from '../framework/observable.js';
+import { formatDuration } from '../utils.js';
 
 const {TIME, DATE_MONTH} = DateFormats;
 
 dayjs.extend(duration);
 
-const formatDuration = (stopDuration) => {
-  const days = stopDuration.days();
-  const hours = stopDuration.hours();
-  const minutes = stopDuration.minutes();
-
-  if (days > 0) {
-    return `${days}D ${hours}H ${minutes}M`;
-  } else if (hours > 0) {
-    return `${hours}H ${minutes}M`;
-  } else {
-    return `${minutes}M`;
-  }
-};
-
-export class TripEventModel extends Observable {
+export default class TripEventModel extends Observable {
   #offers = [];
   #destinations = [];
   tripEvents = [];
-  #filters = [];
   #sortTypes = [];
 
   constructor() {
@@ -37,7 +23,6 @@ export class TripEventModel extends Observable {
     this.#offers = this.offers;
     this.#destinations = this.destinations;
     this.tripEvents = this.events;
-    this.#filters = Object.values(Filters);
     this.#sortTypes = Object.values(SortTypes);
   }
 
@@ -113,10 +98,6 @@ export class TripEventModel extends Observable {
   // TODO: заменить на запрос к серверу
   get destinations() {
     return destionations;
-  }
-
-  get filters() {
-    return this.#filters;
   }
 
   get sortTypes() {

@@ -1,65 +1,93 @@
 import { render, RenderPosition, remove } from '../framework/render.js';
 import TripEventPresenter from './trip-event-presenter.js';
+import NewTripEventPresenter from './new-trip-event-presenter.js';
 import SortingView from '../view/sorting-view.js';
-import FilterView from '../view/filter-view.js';
 import NoTripEventsView from '../view/no-trip-events-view.js';
 import { SortTypes, UpdateType, UserAction, Filters } from '../const.js';
 import {
   sortingEventsByDate,
   sortingEventsByPrice,
   sortingEventsByTime,
-  // updateItem
+  filter
 } from '../utils.js';
 
 export default class MainPresenter {
+  #tripEventsPresentersMap = new Map();
+  #newTripEventPresenter = null;
+
   #currentSortType = SortTypes.DAY;
 
-  #tripEventsPresentersMap = new Map();
+  #tripEventsModel = null;
+  #filterModel = null;
+  #tripEventsElement = null;
+  #tripEventsListElement = null;
+
+  #filterType = Filters.EVERYTHING;
   #sortingView = null;
   #noTripEventsView = null;
 
   #cities = [];
   #offers = [];
-  #filterType = Filters.EVERYTHING;
   #destinations = [];
 
-  constructor({ tripEventsModel }) {
-    this.tripFilterElement = document.querySelector('.trip-controls__filters');
-    this.tripEventsElement = document.querySelector('.trip-events');
+  constructor({ tripEventsModel, tripEventsContainer, filterModel, onNewTaskDestroy }) {
+    this.#tripEventsElement = tripEventsContainer;
 
-    this.tripEventsListElement = document.createElement('ul');
-    this.tripEventsListElement.classList.add('trip-events__list');
-    this.tripEventsElement.appendChild(this.tripEventsListElement);
+    this.#tripEventsListElement = document.createElement('ul');
+    this.#tripEventsListElement.classList.add('trip-events__list');
+    this.#tripEventsElement.appendChild(this.#tripEventsListElement);
 
-    this.tripEventsModel = tripEventsModel;
+    this.#tripEventsModel = tripEventsModel;
+    this.#filterModel = filterModel;
+
+    this.#newTripEventPresenter = new NewTripEventPresenter({
+      container: this.#tripEventsElement,
+      onDataChange: this.#handleViewAction,
+      onDestroy: onNewTaskDestroy
+    });
+
     this.#cities = tripEventsModel.allCities;
     this.#offers = tripEventsModel.offers;
     this.#destinations = tripEventsModel.destinations;
 
-    this.tripEventsModel.addObserver(this.#handleModelEvent);
+    this.#tripEventsModel.addObserver(this.#handleModelEvent);
+    this.#filterModel.addObserver(this.#handleModelEvent);
   }
 
   get tripEvents() {
+    this.#filterType = this.#filterModel.filters;
+    const tripEvents = this.#tripEventsModel.tripEvents.toSorted(sortingEventsByDate);
+    const filteredTripEvents = filter[this.#filterType](tripEvents);
+
     switch (this.#currentSortType.toLowerCase()) {
       case SortTypes.TIME:
-        return this.tripEventsModel.tripEvents.toSorted(sortingEventsByTime);
+        return filteredTripEvents.toSorted(sortingEventsByTime);
       case SortTypes.PRICE:
-        return this.tripEventsModel.tripEvents.toSorted(sortingEventsByPrice);
-      default:
-        return this.tripEventsModel.tripEvents.toSorted(sortingEventsByDate);
+        return filteredTripEvents.toSorted(sortingEventsByPrice);
     }
+
+    return filteredTripEvents;
   }
 
   init() {
     this.#clearTripEventsList();
 
-    this.#renderFilterView(this.tripEventsModel);
-    this.#renderSortingView(this.tripEventsModel);
+    this.#renderSortingView(this.#tripEventsModel);
     this.#renderTripEvents();
   }
 
-  #renderFilterView({ filters }) {
-    render(new FilterView({ filters }), this.tripFilterElement, RenderPosition.BEFOREBEGIN);
+  createListElement() {
+    this.#currentSortType = SortTypes.DAY;
+    this.#filterModel.setFilter(UpdateType.MAJOR, Filters.EVERYTHING);
+    this.#newTripEventPresenter.init(this.#tripEventsModel);
+
+    if (this.tripEvents.length === 0) {
+      this.#clearTripEventsList();
+      return;
+    }
+
+    this.#clearTripEventsList();
+    this.#renderTripEvents();
   }
 
   #renderSortingView({ sortTypes }) {
@@ -70,7 +98,7 @@ export default class MainPresenter {
 
     render(
       this.#sortingView,
-      this.tripEventsElement,
+      this.#tripEventsElement,
       RenderPosition.AFTERBEGIN
     );
   }
@@ -90,7 +118,7 @@ export default class MainPresenter {
 
   #renderTripEvent(tripEvent, cities, offers, destinations) {
     const tripEventPresenter = new TripEventPresenter({
-      tripEventsElement: this.tripEventsListElement,
+      tripEventsElement: this.#tripEventsListElement,
       onViewChange: this.#handleViewChange.bind(this),
       onDataChange: this.#handleViewAction
     });
@@ -100,10 +128,10 @@ export default class MainPresenter {
   }
 
   #renderNoTripEventsView() {
-    const filters = this.tripEventsModel.filters || [];
-    this.#noTripEventsView = new NoTripEventsView({ filters: filters[0] });
+    const filters = this.#filterModel.filters || [];
+    this.#noTripEventsView = new NoTripEventsView({ filters: filters });
 
-    render(this.#noTripEventsView, this.tripEventsElement, RenderPosition.BEFOREEND);
+    render(this.#noTripEventsView, this.#tripEventsElement, RenderPosition.BEFOREEND);
   }
 
   #handleSortTypeChange = (sortType) => {
@@ -120,13 +148,13 @@ export default class MainPresenter {
   #handleViewAction = (actionType, updateType, update) => {
     switch(actionType) {
       case UserAction.UPDATE_EVENT:
-        this.tripEventsModel.updateEvent(updateType, update);
+        this.#tripEventsModel.updateEvent(updateType, update);
         break;
       case UserAction.ADD_EVENT:
-        this.tripEventsModel.addEvent(updateType, update);
+        this.#tripEventsModel.addEvent(updateType, update);
         break;
       case UserAction.DELETE_EVENT:
-        this.tripEventsModel.deleteEvent(updateType, update);
+        this.#tripEventsModel.deleteEvent(updateType, update);
         break;
     }
   };
@@ -155,7 +183,7 @@ export default class MainPresenter {
       remove(this.#noTripEventsView);
     }
 
-    if(resetSortType) {
+    if (resetSortType) {
       this.#currentSortType = SortTypes.DAY;
     }
   }

@@ -43,9 +43,9 @@ export default class TripEventsPresenter {
       cities: this.#allCitiesDestinations,
       offers: this.#offers,
       destinations: this.#destinations,
-      onSubmitEditForm: this.#onSubmitEditForm.bind(this),
-      onClickCloseEditForm: this.#onClickCloseEditForm.bind(this),
-      onClickDeleteEditForm: this.#handleDeleteClick.bind(this)
+      onSubmitEditForm: this.#onSubmitEditForm,
+      onClickCloseEditForm: this.#onClickCloseEditForm,
+      onClickDeleteEditForm: this.#handleDeleteClick
     });
 
     render(this.#tripEventView, this.#container);
