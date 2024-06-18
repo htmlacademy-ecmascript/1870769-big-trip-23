@@ -63,9 +63,11 @@ const UserAction = {
 };
 
 const UpdateType = {
+  INIT: 'INIT',
   PATCH: 'PATCH',
   MINOR: 'MINOR',
   MAJOR: 'MAJOR',
+  ERROR: 'ERROR',
 };
 
 const DEFAULT_EVENT_TYPE = 'Flight';

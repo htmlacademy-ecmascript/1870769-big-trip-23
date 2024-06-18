@@ -15,7 +15,6 @@ export default class FilterPresenter {
     this.#tripEventsModel = tripEventsModel;
     this.#filterModel = filterModel;
 
-
     this.#filterModel.addObserver(this.#handleModelEvent);
     this.#tripEventsModel.addObserver(this.#handleModelEvent);
   }

@@ -3,6 +3,7 @@ import TripEventPresenter from './trip-event-presenter.js';
 import NewTripEventPresenter from './new-trip-event-presenter.js';
 import SortingView from '../view/sorting-view.js';
 import NoTripEventsView from '../view/no-trip-events-view.js';
+import LoadingView from '../view/loading-view.js';
 import { SortTypes, UpdateType, UserAction, Filters } from '../const.js';
 import {
   sortingEventsByDate,
@@ -16,12 +17,14 @@ export default class MainPresenter {
   #newTripEventPresenter = null;
 
   #currentSortType = SortTypes.DAY;
+  #loadingElement = new LoadingView();
 
   #tripEventsModel = null;
   #filterModel = null;
   #tripEventsElement = null;
   #tripEventsListElement = null;
 
+  #isLoading = true;
   #filterType = Filters.EVERYTHING;
   #sortingView = null;
   #noTripEventsView = null;
@@ -108,6 +111,11 @@ export default class MainPresenter {
     const offers = this.#offers;
     const destinations = this.#destinations;
 
+    if (this.#isLoading) {
+      this.#renderLoading();
+      return;
+    }
+
     if (this.tripEvents.length === 0) {
       this.#renderNoTripEventsView();
       return;
@@ -132,6 +140,10 @@ export default class MainPresenter {
     this.#noTripEventsView = new NoTripEventsView({ filters: filters });
 
     render(this.#noTripEventsView, this.#tripEventsElement, RenderPosition.BEFOREEND);
+  }
+
+  #renderLoading() {
+    render(this.#loadingElement, this.#tripEventsElement.element, RenderPosition.AFTERBEGIN);
   }
 
   #handleSortTypeChange = (sortType) => {
@@ -172,6 +184,11 @@ export default class MainPresenter {
         this.#clearTripEventsList({ clearTripEventsList: true });
         this.#renderTripEvents();
         break;
+      case UpdateType.INIT:
+        this.#isLoading = false;
+        remove(this.#loadingElement);
+        this.#renderTripEvents();
+        break;
     }
   };
 
@@ -182,6 +199,7 @@ export default class MainPresenter {
     if (this.#noTripEventsView) {
       remove(this.#noTripEventsView);
     }
+    remove(this.#loadingElement);
 
     if (resetSortType) {
       this.#currentSortType = SortTypes.DAY;

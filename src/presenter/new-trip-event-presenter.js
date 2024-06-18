@@ -33,9 +33,9 @@ export default class NewTripEventPresenter {
       offers: this.#offers,
       destinations:  this.#destinations,
       cities: this.#allCitiesDestinations,
-      onSubmitEditForm: this.#handleFormSubmit.bind(this),
-      onClickCloseEditForm: this.#handleCancelEditForm.bind(this),
-      onClickDeleteEditForm: this.#handleCancelEditForm.bind(this),
+      onSubmitEditForm: this.#handleFormSubmit,
+      onClickCloseEditForm: this.#handleCancelEditForm,
+      onClickDeleteEditForm: this.#handleCancelEditForm,
     });
 
     document.addEventListener('keydown', this.#escKeyDownHandler);
