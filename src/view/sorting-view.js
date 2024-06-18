@@ -43,7 +43,7 @@ export default class SortingView extends AbstractView{
   }
 
   #onSortingTypeChange = (evt) => {
-    const TargetValue = evt.target.value.split('-');
-    this.#handleSortTypeChange(TargetValue[1].toUpperCase());
+    const targetValue = evt.target.value.split('-');
+    this.#handleSortTypeChange(targetValue[1].toUpperCase());
   };
 }

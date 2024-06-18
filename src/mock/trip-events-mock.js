@@ -19,9 +19,7 @@ const createTripEventsMock = () => {
     destination: getRandomArrayElement(destionations).id,
     // eslint-disable-next-line camelcase
     is_favorite: getRandomBoolean(),
-    offers: [
-      getRandomArrayElement(offers).id,
-    ],
+    offers: offers,
     type: getRandomArrayElement(TRIP_EVENT_TYPE)
   };
 };

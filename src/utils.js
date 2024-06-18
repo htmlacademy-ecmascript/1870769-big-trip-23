@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { Filters } from './const.js';
 
 const getRandomArrayElement = (items) => items[Math.floor(Math.random() * items.length)];
 const getRandomBoolean = () => Math.random() < 0.5;
@@ -40,6 +41,33 @@ const sortingEventsByPrice = (tripA, tripB) => tripB.basePrice - tripA.basePrice
 
 const sortingEventsByTime = (tripA, tripB) => tripB.durationInMinutes - tripA.durationInMinutes;
 
+const isTripEventHaveOffers = (tripEvent) => tripEvent.length !== 0;
+const isDatesEqual = (dateA, dateB) => (dateA === null && dateB === null) || dayjs(dateA).isSame(dateB, 'D');
+
+const isListElementFuture = (dueDate) => dueDate && dayjs().isAfter(dueDate, 'D');
+const isListElementPresent = (dueDate) => dueDate && dayjs(dueDate).isSame(dayjs(), 'D');
+const isListElementPast = (dueDate) => dueDate && dayjs().isBefore(dueDate, 'D');
+const filter = {
+  [Filters.EVERYTHING]: (tripEvents) => tripEvents,
+  [Filters.FUTURE]: (tripEvents) => tripEvents.filter((tripEvent) => isListElementFuture(tripEvent.eventDate)),
+  [Filters.PRESENT]: (tripEvents) => tripEvents.filter((tripEvent) => isListElementPresent(tripEvent.eventDate)),
+  [Filters.PAST]: (tripEvents) => tripEvents.filter((tripEvent) => isListElementPast(tripEvent.eventDate)),
+};
+
+const formatDuration = (stopDuration) => {
+  const days = stopDuration.days();
+  const hours = stopDuration.hours();
+  const minutes = stopDuration.minutes();
+
+  if (days > 0) {
+    return `${days}D ${hours}H ${minutes}M`;
+  } else if (hours > 0) {
+    return `${hours}H ${minutes}M`;
+  } else {
+    return `${minutes}M`;
+  }
+};
+
 export {
   getRandomArrayElement,
   getRandomBoolean,
@@ -50,6 +78,10 @@ export {
   updateItem,
   sortingEventsByDate,
   sortingEventsByPrice,
-  sortingEventsByTime
+  sortingEventsByTime,
+  isDatesEqual,
+  isTripEventHaveOffers,
+  filter,
+  formatDuration
 };
 

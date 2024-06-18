@@ -1,6 +1,8 @@
 import { render, replace, remove } from '../framework/render.js';
 import TripEventsView from '../view/trip-events-view.js';
 import EditFormView from '../view/edit-form-view.js';
+import { UserAction, UpdateType } from '../const.js';
+import { isDatesEqual, isTripEventHaveOffers } from '../utils.js';
 
 export default class TripEventsPresenter {
   #container = null;
@@ -15,13 +17,13 @@ export default class TripEventsPresenter {
   #destinations = [];
 
   #onViewChange = null;
-  #onFavoriteClick = null;
+  #handleDataChange = null;
   #escKeydownHandler = null;
 
-  constructor({ tripEventsElement, onViewChange, onFavoriteClick }) {
+  constructor({ tripEventsElement, onViewChange, onDataChange }) {
     this.#container = tripEventsElement;
     this.#onViewChange = onViewChange;
-    this.#onFavoriteClick = onFavoriteClick;
+    this.#handleDataChange = onDataChange;
   }
 
   init(tripEvent, cities, offers, destinations) {
@@ -31,7 +33,7 @@ export default class TripEventsPresenter {
     this.#destinations = destinations;
 
     this.#tripEventView = new TripEventsView({
-      tripEvent,
+      tripEvent: this.#tripEvent,
       onOpenEdit: this.#onClickOpenEditForm.bind(this),
       onFavoritClick: this.#handleFavoriteClick.bind(this)
     });
@@ -41,8 +43,9 @@ export default class TripEventsPresenter {
       cities: this.#allCitiesDestinations,
       offers: this.#offers,
       destinations: this.#destinations,
-      onSubmitEditForm: this.#onSubmitEditForm.bind(this),
-      onClickCloseEditForm: this.#onClickCloseEditForm.bind(this),
+      onSubmitEditForm: this.#onSubmitEditForm,
+      onClickCloseEditForm: this.#onClickCloseEditForm,
+      onClickDeleteEditForm: this.#handleDeleteClick
     });
 
     render(this.#tripEventView, this.#container);
@@ -91,11 +94,19 @@ export default class TripEventsPresenter {
     this.#switchToEditForm();
   }
 
-  #onSubmitEditForm (tripEvent) {
-    this.#tripEditFormView.reset(tripEvent);
+  #onSubmitEditForm = (update) => {
+    const isMinorUpdate =
+    !isDatesEqual(this.#tripEvent.eventSchedule.dateFrom, update.eventSchedule.dateFrom) ||
+    isTripEventHaveOffers(this.#tripEvent.eventSchedule.offers) !== isTripEventHaveOffers(update.eventSchedule.offers);
+
+    this.#handleDataChange(
+      UserAction.UPDATE_EVENT,
+      isMinorUpdate ? UpdateType.MINOR : UpdateType.PATCH,
+      update
+    );
+
     this.#switchToViewForm();
-    this.#tripEventView.reset(tripEvent);
-  }
+  };
 
   #onClickCloseEditForm() {
     this.#tripEditFormView.reset(this.#tripEvent);
@@ -110,7 +121,21 @@ export default class TripEventsPresenter {
     }
   }
 
-  #handleFavoriteClick = () => {
-    this.#onFavoriteClick(this.#tripEvent);
-  };
+  #handleDeleteClick(tripEvent) {
+    this.#handleDataChange(
+      UserAction.DELETE_EVENT,
+      UpdateType.MINOR,
+      tripEvent
+    );
+    this.#switchToViewForm();
+  }
+
+  #handleFavoriteClick() {
+    this.#handleDataChange(
+      UserAction.UPDATE_EVENT,
+      UpdateType.MINOR,
+      {...this.#tripEvent, isFavorite: !this.#tripEvent.isFavorite}
+    );
+    this.#switchToViewForm();
+  }
 }
