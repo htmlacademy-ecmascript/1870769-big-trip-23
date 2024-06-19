@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+import { DateFormats } from '../const.js';
 
 /**
  * @param {Array<import('../model/trip-event-model.js').TripOffer>} offers
@@ -36,8 +37,11 @@ const createTripEventsView = ({
   isFavorite,
   destination,
   eventDuration,
+  tripEvent
 }) => {
   const favoriteClassName = isFavorite ? 'event__favorite-btn--active' : '';
+  const { name } = destination.find((destinationName) => destinationName.id === tripEvent.destination);
+
   return `<ul class="trip-events__list">
     <li class="trip-events__item">
       <div class="event">
@@ -46,7 +50,7 @@ const createTripEventsView = ({
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type.toLowerCase()}.png" alt="Event type icon">
         </div>
 
-        <h3 class="event__title">${type} ${destination}</h3>
+        <h3 class="event__title">${type} ${name}</h3>
 
         <div class="event__schedule">
           <p class="event__time">
@@ -91,6 +95,10 @@ export default class TripEventsView extends AbstractStatefulView {
   #clickFavoritBtn = null;
   /** @type {?Function} */
   #clickOpenHandler = null;
+  /**
+   * @type {?State}
+   **/
+  #initialState = null;
 
   /**
    *
@@ -100,33 +108,63 @@ export default class TripEventsView extends AbstractStatefulView {
    *  onFavoritClick: Function
    * }} param
    */
-  constructor({ tripEvent, onOpenEdit, onFavoritClick, offers, destinations }) {
+  constructor({ tripEvent, onOpenEdit, onFavoritClick, destinations }) {
     super();
-    this._setState(tripEvent, offers, destinations);
     this.#clickOpenHandler = onOpenEdit;
     this.#clickFavoritBtn = onFavoritClick;
+
+    this.#initialState = {
+      tripEvent: tripEvent,
+      destination: destinations
+    };
+
+    this.setState(this.#initialState);
 
     this._restoreHandlers();
   }
 
   get template() {
     /** @type {import('../model/trip-event-model.js').TripEvent} */
-    const tripEvent = this._state;
+    const tripEvent = this.state;
+
     return createTripEventsView({
-      type: tripEvent.type,
-      dateFrom: dayjs(tripEvent.dateFrom).format('HH:mm'),
-      dateTo: dayjs(tripEvent.dateTo).format('HH:mm'),
-      eventDate: dayjs(tripEvent.dateFrom).format('YYYY-MM-DD'),
-      offers: tripEvent.offers,
-      basePrice: tripEvent.basePrice,
-      isFavorite: tripEvent.isFavorite,
+      tripEvent: tripEvent.tripEvent,
+      type: tripEvent.tripEvent.type,
+      dateFrom: dayjs(tripEvent.tripEvent.dateFrom).format(DateFormats.TIME),
+      dateTo: dayjs(tripEvent.tripEvent.dateTo).format(DateFormats.TIME),
+      eventDate: dayjs(tripEvent.tripEvent.dateFrom).format(DateFormats.DATE_MONTH),
+      offers: tripEvent.tripEvent.offers,
+      basePrice: tripEvent.tripEvent.basePrice,
+      isFavorite: tripEvent.tripEvent.isFavorite,
       destination: tripEvent.destination,
       eventDuration: `${dayjs(tripEvent.dateTo).diff(tripEvent.dateFrom, 'hour') }H`,
     });
   }
 
   reset(tripEvent) {
-    this.updateElement(tripEvent);
+    this.updateState({
+      tripEvent,
+      ...this.#initialState});
+
+  }
+
+  /** @returns {Partial<State>} */
+  get state() {
+    return this._state;
+  }
+
+  /**
+     * @param {Partial<State>} update
+     */
+  setState(update) {
+    this._setState(update);
+  }
+
+  /**
+     * @param {Partial<State>} update
+     */
+  updateState(update) {
+    this.updateElement(update);
   }
 
   _restoreHandlers() {

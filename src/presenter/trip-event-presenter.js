@@ -47,9 +47,6 @@ export default class TripEventsPresenter {
     if (this.#tripEvent) {
       this.#tripEventView = new TripEventsView({
         tripEvent: this.#tripEvent,
-        offers:
-        this.#offers.find(({ type }) => type === this.#tripEvent?.type)
-          .offers || [],
         destinations: this.#destinations,
         onOpenEdit: this.#onClickOpenEditForm.bind(this),
         onFavoritClick: this.#handleFavoriteClick.bind(this),

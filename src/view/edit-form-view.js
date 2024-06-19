@@ -3,7 +3,6 @@ import { DateFormats, TRIP_EVENT_TYPE, DefaultFlatpickrConfig, DEFAULT_TRIP_EVEN
 import dayjs from 'dayjs';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
-import he from 'he';
 
 /**
  *
@@ -61,8 +60,15 @@ const createSectionDestination = ({description, src}) => `
   ${createPhotoTape(src)}
 </section>`;
 
-const generateEventFieldDestination = (type, name, allCities, isDisabled) => {
-  const cityOptions = allCities.map((cityName) => `<option value="${cityName}"></option>`).join('');
+/**
+ *
+ * @param {string} type
+ * @param {boolean} isDisabled
+ * @returns {string}
+ */
+const generateEventFieldDestination = (type, destination, isDisabled, tripEvent) => {
+  const allCities = destination.map((destinationName) => `<option value="${destinationName.name}"></option>`).join('');
+  const { name } = destination.find((destinationName) => destinationName.id === tripEvent.destination);
 
   return (`
   <label class="event__label  event__type-output" for="event-destination-1">
@@ -72,7 +78,7 @@ const generateEventFieldDestination = (type, name, allCities, isDisabled) => {
   type="text" name="event-destination" value="${name}" list="destination-list-1"
   ${isDisabled ? 'disabled' : ''}>
   <datalist id="destination-list-1" >
-  ${he.encode(cityOptions)}
+  ${allCities}
   </datalist>
 `);
 };
@@ -109,6 +115,7 @@ const generateEventFieldDestination = (type, name, allCities, isDisabled) => {
  * @returns
  */
 const createEditFormView = ({
+  tripEvent,
   type,
   destination,
   eventDate,
@@ -116,13 +123,13 @@ const createEditFormView = ({
   offers,
   isAnyOffers,
   basePrice,
-  allCities,
   isDisabled,
   isSaving,
   isDeleting
 }) => {
   const { DATE_TIME } = DateFormats;
-  const { pictures, name } = destination;
+  const { pictures, name } = destination.find((destinationName) => destinationName.id === tripEvent.destination);
+
 
   return `
   <li class="trip-events__item">
@@ -146,7 +153,7 @@ const createEditFormView = ({
         </div>
 
         <div class="event__field-group  event__field-group--destination">
-          ${generateEventFieldDestination(type, name, allCities, isDisabled)}
+          ${generateEventFieldDestination(type, destination, name, tripEvent, isDisabled)}
         </div>
 
         <div class="event__field-group  event__field-group--time">
@@ -270,30 +277,30 @@ export default class EditFormView extends AbstractStatefulView {
     if (!this.state?.tripEvent || !this.state?.allCities) {
       return '';
     }
+    /** @type {import('../model/trip-event-model.js').TripEvent} */
+    const tripEvent = this.state;
 
     return createEditFormView({
-      type: this.state.tripEvent.type,
-      destination: {
-        name: this.state.tripEvent.destination,
-        pictures: [],
-      },
-      allCities: this.state.allCities,
-      basePrice: this.state.tripEvent.basePrice,
-      eventDate: dayjs(this.state.tripEvent.dateFrom).format(DateFormats.DATE),
+      tripEvent: tripEvent.tripEvent,
+      type: tripEvent.tripEvent.type,
+      destination:  tripEvent.destinations,
+      allCities: tripEvent.allCities,
+      basePrice: tripEvent.tripEvent.basePrice,
+      eventDate: dayjs(tripEvent.tripEvent.dateFrom).format(DateFormats.DATE),
       eventSchedule: {
-        dateFrom: dayjs(this.state.tripEvent.dateFrom).format(DateFormats.TIME),
-        dateTo: dayjs(this.state.tripEvent.dateTo).format(DateFormats.TIME),
+        dateFrom: dayjs(tripEvent.tripEvent.dateFrom).format(DateFormats.TIME),
+        dateTo: dayjs(tripEvent.tripEvent.dateTo).format(DateFormats.TIME),
       },
-      offers: this.state.tripEvent.offers,
-      isAnyOffers: this.state.tripEvent.isAnyOffers,
-      isDeleting: this.state.tripEvent.isDeleting,
-      isDisabled: this.state.tripEvent.isDisabled,
-      isSaving: this.state.tripEvent.isSaving,
+      offers: tripEvent.tripEvent.offers,
+      isAnyOffers: tripEvent.tripEvent.isAnyOffers,
+      isDeleting: tripEvent.tripEvent.isDeleting,
+      isDisabled: tripEvent.tripEvent.isDisabled,
+      isSaving: tripEvent.tripEvent.isSaving,
     });
   }
 
   reset(tripEvent) {
-    this.updateElement({
+    this.updateState({
       ...this.#initialState,
       ...EditFormView.parseTripEventToState(tripEvent),
     });
@@ -440,7 +447,7 @@ export default class EditFormView extends AbstractStatefulView {
         offers: newOffers,
       });
 
-      this.updateElement({
+      this.updateState({
         type: newEventType,
         offers: newOffers,
       });
