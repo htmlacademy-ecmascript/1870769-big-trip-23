@@ -144,7 +144,7 @@ export default class MainPresenter {
       onDataChange: this.#handleViewAction
     });
 
-    tripEventPresenter.init(tripEvent, this.#cities, this.#tripEventsModel.offers, this.#destinations);
+    tripEventPresenter.init(tripEvent, this.#cities, this.#tripEventsModel.offers, this.#tripEventsModel.destinations);
     this.#tripEventsPresentersMap.set(tripEvent.id, tripEventPresenter);
   }
 

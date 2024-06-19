@@ -340,8 +340,8 @@ export default class EditFormView extends AbstractStatefulView {
     if (this?.state.offers?.length) {
       // @ts-ignore
       this.element
-        .querySelector('.event__available-offers')
-        .addEventListener('click', this.#offersChangeToggleHandler);
+        ?.querySelector('.event__available-offers')
+        ?.addEventListener('click', this.#offersChangeToggleHandler);
     }
 
     this.#setDatePickers({
