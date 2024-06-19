@@ -1,26 +1,41 @@
+import dayjs from 'dayjs';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 
-const generateOfferHTML = (offers) => offers.map((offer) => {
-  if (!offer.isChecked) {
-    return '';
-  }
-
-  return `
+/**
+ * @param {Array<import('../model/trip-event-model.js').TripOffer>} offers
+ * @returns {string}
+ */
+const generateOfferHTML = (offers) => offers.map((offer) => `
   <li class="event__offer">
     <span class="event__offer-title">${offer.title}</span>
     &plus;&euro;&nbsp;
     <span class="event__offer-price">${offer.price}</span>
-  </li>`;
-}).join('');
+  </li>`).join('');
 
+/**
+ * @param {{
+ *  type: string,
+ *  dateFrom: string,
+ *  dateTo: string,
+ *  eventDate: string,
+ *  offers: Array<import('../model/trip-event-model.js').TripOffer>,
+ *  basePrice: number,
+ *  isFavorite: boolean,
+ *  eventDuration: string,
+ *  destination: string,
+ * }} param
+ * @returns {string}
+ */
 const createTripEventsView = ({
   type,
+  dateFrom,
+  dateTo,
   eventDate,
-  destination,
   offers,
-  eventSchedule: {dateFrom, dateTo, eventDuration},
   basePrice,
-  isFavorite
+  isFavorite,
+  destination,
+  eventDuration,
 }) => {
   const favoriteClassName = isFavorite ? 'event__favorite-btn--active' : '';
   return `<ul class="trip-events__list">
@@ -68,14 +83,26 @@ const createTripEventsView = ({
 };
 
 export default class TripEventsView extends AbstractStatefulView {
+  /** @type {?HTMLElement} */
   #eventRollupBtnElement = null;
+  /** @type {?HTMLElement} */
   #eventFavoritBtnElement = null;
+  /** @type {?Function} */
   #clickFavoritBtn = null;
+  /** @type {?Function} */
   #clickOpenHandler = null;
 
-  constructor({ tripEvent, onOpenEdit, onFavoritClick }) {
+  /**
+   *
+   * @param {{
+   *  tripEvent: import('../model/trip-event-model.js').TripEvent,
+   *  onOpenEdit: Function,
+   *  onFavoritClick: Function
+   * }} param
+   */
+  constructor({ tripEvent, onOpenEdit, onFavoritClick, offers, destinations }) {
     super();
-    this._setState(tripEvent);
+    this._setState(tripEvent, offers, destinations);
     this.#clickOpenHandler = onOpenEdit;
     this.#clickFavoritBtn = onFavoritClick;
 
@@ -83,7 +110,19 @@ export default class TripEventsView extends AbstractStatefulView {
   }
 
   get template() {
-    return createTripEventsView(this._state);
+    /** @type {import('../model/trip-event-model.js').TripEvent} */
+    const tripEvent = this._state;
+    return createTripEventsView({
+      type: tripEvent.type,
+      dateFrom: dayjs(tripEvent.dateFrom).format('HH:mm'),
+      dateTo: dayjs(tripEvent.dateTo).format('HH:mm'),
+      eventDate: dayjs(tripEvent.dateFrom).format('YYYY-MM-DD'),
+      offers: tripEvent.offers,
+      basePrice: tripEvent.basePrice,
+      isFavorite: tripEvent.isFavorite,
+      destination: tripEvent.destination,
+      eventDuration: `${dayjs(tripEvent.dateTo).diff(tripEvent.dateFrom, 'hour') }H`,
+    });
   }
 
   reset(tripEvent) {
@@ -91,20 +130,37 @@ export default class TripEventsView extends AbstractStatefulView {
   }
 
   _restoreHandlers() {
-    this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
-    this.#eventFavoritBtnElement = this.element.querySelector('.event__favorite-btn');
+    this.#eventRollupBtnElement =
+      this.element.querySelector('.event__rollup-btn');
+    this.#eventFavoritBtnElement = this.element.querySelector(
+      '.event__favorite-btn'
+    );
 
-    this.#eventRollupBtnElement.addEventListener('click', this.#onOpenClickHandler);
-    this.#eventFavoritBtnElement.addEventListener('click', this.#onFavoritClickHandler);
+    if (!this.#eventRollupBtnElement || !this.#eventFavoritBtnElement) {
+      throw new Error('Can\'t find necessary elements');
+    }
+
+    this.#eventRollupBtnElement.addEventListener(
+      'click',
+      this.#onOpenClickHandler
+    );
+    this.#eventFavoritBtnElement.addEventListener(
+      'click',
+      this.#onFavoritClickHandler
+    );
   }
 
   #onOpenClickHandler = (evt) => {
     evt.preventDefault();
-    this.#clickOpenHandler();
+    if (this.#clickOpenHandler) {
+      this.#clickOpenHandler();
+    }
   };
 
   #onFavoritClickHandler = (evt) => {
     evt.preventDefault();
-    this.#clickFavoritBtn();
+    if (this.#clickFavoritBtn) {
+      this.#clickFavoritBtn();
+    }
   };
 }

@@ -20,7 +20,7 @@ export default class FilterPresenter {
   }
 
   get filters() {
-    const tripEvents = this.#tripEventsModel.tripEvents;
+    const tripEvents = this.#tripEventsModel.events;
 
     return Object.values(Filters).map((type) => ({
       type,

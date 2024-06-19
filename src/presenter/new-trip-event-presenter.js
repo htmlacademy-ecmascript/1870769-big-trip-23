@@ -29,10 +29,11 @@ export default class NewTripEventPresenter {
     this.#destinations = destinations;
 
     this.#tripEditFormView = new EditFormView({
-      tripEvents: this.#tripEvent,
-      offers: this.#offers,
-      destinations:  this.#destinations,
+      tripEvent: this.#tripEvent,
       cities: this.#allCitiesDestinations,
+      offers: this.#offers.find(({ type }) => type === this.#tripEvent.type)?.offers || [],
+      allOffers: this.#offers,
+      destinations: this.#destinations,
       onSubmitEditForm: this.#handleFormSubmit,
       onClickCloseEditForm: this.#handleCancelEditForm,
       onClickDeleteEditForm: this.#handleCancelEditForm,
@@ -51,6 +52,32 @@ export default class NewTripEventPresenter {
     this.#tripEditFormView = null;
     remove(this.#tripEditFormView);
     this.#handleDestroy();
+  }
+
+  removeForm() {
+    remove(this.#tripEditFormView);
+    this.destroy();
+
+    this.#tripEditFormView = null;
+  }
+
+  setSaving() {
+    this.#tripEditFormView.updateElement({
+      isDisabled: true,
+      isSaving: true,
+    });
+  }
+
+  setAborting() {
+    const resetFormState = () => {
+      this.#tripEditFormView.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false,
+      });
+    };
+
+    this.#tripEditFormView.shake(resetFormState);
   }
 
   #handleFormSubmit = (tripEvent) => {

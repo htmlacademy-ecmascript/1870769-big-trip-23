@@ -23,11 +23,18 @@ const newEventButtonComponent = new NewEventButtonView({
 });
 
 function handleNewListElementFormClose() {
-  newEventButtonComponent.element.disabled = false;
+  const element = newEventButtonComponent.element;
+  if (element instanceof HTMLButtonElement) {
+    element.disabled = false;
+  }
 }
 
 function handleNewEventButtonClick() {
-  newEventButtonComponent.element.disabled = true;
+  const element = newEventButtonComponent.element;
+  if (element instanceof HTMLButtonElement) {
+    element.disabled = true;
+  }
+
   generalPresenter.createListElement();
 }
 
@@ -35,5 +42,9 @@ filterPresenter.init();
 generalPresenter.init();
 tripEventsModel.init()
   .finally(() => {
-    render(newEventButtonComponent, document.querySelector('.trip-main'));
+    /** @type {HTMLElement | null} */
+    const tripMainElement = document.querySelector('.trip-main');
+    if (tripMainElement) {
+      render(newEventButtonComponent, tripMainElement);
+    }
   });

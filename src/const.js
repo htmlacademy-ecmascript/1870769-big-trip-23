@@ -4,6 +4,11 @@ import duration from 'dayjs/plugin/duration.js';
 
 dayjs.extend(duration);
 
+const Mode = {
+  DEFAULT: 'DEFAULT',
+  EDITING: 'EDITING'
+};
+
 const TRIP_EVENT_TYPE = [
   'Taxi', 'Bus', 'Train', 'Ship', 'Drive', 'Flight', 'Check-in', 'Sightseeing', 'Restaurant'
 ];
@@ -70,37 +75,26 @@ const UpdateType = {
   ERROR: 'ERROR',
 };
 
-const DEFAULT_EVENT_TYPE = 'Flight';
+const DEFAULT_EVENT_TYPE = 'flight';
 
 const dateTo = new Date();
 dateTo.setDate(new Date().getDate() + 1);
-// const eventDuration = dayjs.duration(dayjs(dateTo).diff(dayjs(new Date())));
 
+/** @type {import('./model/trip-event-model').TripEvent} */
 const DEFAULT_TRIP_EVENT = {
   type: DEFAULT_EVENT_TYPE,
-  eventDate: dayjs(new Date()).format(DateFormats.DATE_MONTH),
-  eventSchedule: {
-    dateFrom: dayjs(new Date()).format(DateFormats.TIME),
-    dateTo: dayjs(dateTo).format(DateFormats.TIME),
-    // eventDuration: formatDuration(eventDuration),
-
-  },
-  destination: {
-    id: '',
-    description: '',
-    name: '',
-    picture: {
-      src: '',
-      description: '',
-    },
-  },
+  destination: '',
   basePrice: 0,
   offers: [],
   isFavorite: false,
+  dateFrom: new Date(),
+  dateTo,
+  id: '',
 };
 
 export {
   TRIP_EVENT_TYPE,
+  Mode,
   DateFormats,
   DEFAULT_TRIP_EVENT,
   SortTypes,
