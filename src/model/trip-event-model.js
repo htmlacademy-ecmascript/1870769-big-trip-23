@@ -1,103 +1,150 @@
-import { tripEvents } from '../mock/trip-events-mock.js';
-import { offers } from '../mock/trip-offers-mock.js';
-import { destionations } from '../mock/trip-destinations-mock.js';
-import { DateFormats, SortTypes } from '../const.js';
+import { SortTypes, UpdateType } from '../const.js';
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration.js';
 import Observable from '../framework/observable.js';
-import { formatDuration } from '../utils.js';
-
-const {TIME, DATE_MONTH} = DateFormats;
 
 dayjs.extend(duration);
 
 export default class TripEventModel extends Observable {
+  /** @type {Array<TripOfferTyped>} */
   #offers = [];
   #destinations = [];
-  tripEvents = [];
+  /** @type {Array<TripEvent>} */
+  #tripEvents = [];
   #sortTypes = [];
 
-  constructor() {
+  /** @type {?import('../trip-api-service.js').default} */
+  #tripApiService = null;
+
+  /**
+   * @param {{
+   *  tripApiService: import('../trip-api-service.js').default
+   * }} param
+   */
+  constructor({ tripApiService }) {
     super();
 
-    this.#offers = this.offers;
-    this.#destinations = this.destinations;
-    this.tripEvents = this.events;
+    this.#tripApiService = tripApiService;
     this.#sortTypes = Object.values(SortTypes);
   }
 
-  get events() {
-    // TODO: заменить на запрос к серверу
-    return tripEvents.map((tripEvent) => {
-      const eventDuration = dayjs.duration(dayjs(tripEvent.date_to).diff(dayjs(tripEvent.date_from)));
-      const destination = this.#destinations.find((_destination) => _destination.id === tripEvent.destination);
+  async init() {
+    if (!this.#tripApiService) {
+      throw new Error('Can\'t init model without tripApiService');
+    }
 
-      return {
-        id: tripEvent.id,
-        eventDate: dayjs(tripEvent.date_from).format(DATE_MONTH),
-        type: tripEvent.type,
-        destination: destination,
-        eventSchedule: {
-          dateFrom: dayjs(tripEvent.date_from).format(TIME),
-          dateTo: dayjs(tripEvent.date_to).format(TIME),
-          eventDuration: formatDuration(eventDuration),
-        },
-        durationInMinutes: eventDuration.asMinutes(),
-        offers: tripEvent.offers,
-        basePrice: tripEvent.base_price,
-        isFavorite: tripEvent.is_favorite,
-      };
-    });
+    try {
+      this.#destinations = await this.#tripApiService.destinations;
+      this.#offers = await this.#tripApiService.offers;
+      const tripEvents = await this.#tripApiService.points;
+      this.#tripEvents = tripEvents.map(this.#adaptToClient);
+    } catch (err) {
+      this.#destinations = [];
+      this.#offers = [];
+      this.#tripEvents = [];
+    } finally {
+      this._notify(UpdateType.INIT);
+    }
   }
 
-  updateEvent(updateType, update) {
-    const index = this.tripEvents.findIndex((tripEvent) => tripEvent.id === update.id);
+  /**
+   * @returns {Array<TripEvent>}
+   */
+  get events() {
+    return this.#tripEvents;
+  }
+
+  /**
+   *
+   * @param {*} updateType
+   * @param {TripEvent} update
+   */
+  async updateEvent(updateType, update) {
+    const index = this.#tripEvents.findIndex(
+      (tripEvent) => tripEvent.id === update.id
+    );
 
     if (index === -1) {
       throw new Error('Can\'t update unexisting Event');
     }
 
-    this.tripEvents = [
-      ...this.tripEvents.slice(0, index),
-      update,
-      ...this.tripEvents.slice(index + 1),
-    ];
+    if (!this.#tripApiService) {
+      throw new Error('Can\'t init model without tripApiService');
+    }
 
-    this._notify(updateType, update);
+    try {
+      const response = await this.#tripApiService.updatePoint({
+        id: update.id,
+        type: update.type,
+        destination: update.destination,
+        'date_from': update.dateFrom.toISOString(),
+        'date_to': update.dateTo.toISOString(),
+        'base_price': update.basePrice,
+        'is_favorite': update.isFavorite,
+        offers: update.offers.map((offer) => offer.id),
+      });
+
+      const updatedEventsElement = this.#adaptToClient(response);
+
+      this.#tripEvents = [
+        ...this.#tripEvents.slice(0, index),
+        updatedEventsElement,
+        ...this.#tripEvents.slice(index + 1),
+      ];
+
+      this._notify(updateType, update);
+    } catch (err) {
+      throw new Error('Can\'t update event element');
+    }
   }
 
-  addEvent(updateType, update) {
-    this.tripEvents = [
-      update,
-      ...this.tripEvents,
-    ];
+  async addEvent(updateType, update) {
+    if (!this.#tripApiService) {
+      throw new Error('Can\'t init model without tripApiService');
+    }
 
-    this._notify(updateType, update);
+    try {
+      const response = await this.#tripApiService.addPoint(update);
+      const newEventsElement = this.#adaptToClient(response);
+
+      this.tripEvents = [newEventsElement, ...this.tripEvents];
+
+      this._notify(updateType, update);
+    } catch (err) {
+      throw new Error('Can\'t add list element');
+    }
   }
 
-  deleteEvent(updateType, update) {
-    const index = this.tripEvents.findIndex((event) => event.id === update.id);
+  async deleteEvent(updateType, update) {
+    const index = this.#tripEvents.findIndex((event) => event.id === update.id);
 
     if (index === -1) {
       throw new Error('Can\'t delete unexisting event');
     }
 
-    this.tripEvents = [
-      ...this.tripEvents.slice(0, index),
-      ...this.tripEvents.slice(index + 1),
-    ];
+    if (!this.#tripApiService) {
+      throw new Error('Can\'t init model without tripApiService');
+    }
 
-    this._notify(updateType);
+    try {
+      await this.#tripApiService.deletePoint(update);
+      this.#tripEvents = [
+        ...this.#tripEvents.slice(0, index),
+        ...this.#tripEvents.slice(index + 1),
+      ];
+
+      this._notify(updateType);
+    } catch (err) {
+      throw new Error('Can\'t delete event element');
+    }
   }
 
-  // TODO: заменить на запрос к серверу
   get offers() {
-    return offers;
+    return this.#offers;
   }
 
-  // TODO: заменить на запрос к серверу
   get destinations() {
-    return destionations;
+    return this.#destinations;
   }
 
   get sortTypes() {
@@ -107,4 +154,49 @@ export default class TripEventModel extends Observable {
   get allCities() {
     return this.#destinations.map((destination) => destination.name);
   }
+
+  /**
+   *
+   * @param {import('../trip-api-service.js').TripEvent} tripEvent
+   * @returns {TripEvent}
+   */
+  #adaptToClient = (tripEvent) => ({
+    id: tripEvent.id,
+    type: tripEvent.type,
+    destination: tripEvent.destination,
+    basePrice: tripEvent['base_price'],
+    dateFrom: new Date(tripEvent['date_from']),
+    dateTo: new Date(tripEvent['date_to']),
+    isFavorite: tripEvent['is_favorite'],
+    offers: (this.#offers || []).flatMap((type) =>
+      type.offers.filter((offer) => tripEvent.offers.includes(offer.id))
+    ),
+  });
 }
+
+/**
+ *
+ * @typedef {{
+ *   type: import('../trip-api-service.js').TripEventType,
+ *   offers: Array<TripOffer>
+ * }} TripOfferTyped
+ *
+ * @typedef {{
+ *  id: string,
+ *  title: string,
+ *  price: number,
+ *  isChecked: boolean
+ * }} TripOffer
+ *
+ * @typedef {{
+ *  id: string,
+ *  type: import('../trip-api-service.js').TripEventType,
+ *  destination: string,
+ *  dateFrom: Date,
+ *  dateTo: Date,
+ *  basePrice: number,
+ *  offers: Array<TripOffer>,
+ *  isFavorite: boolean
+ * }} TripEvent
+ *
+ */

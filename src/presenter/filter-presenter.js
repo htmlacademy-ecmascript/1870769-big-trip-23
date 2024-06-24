@@ -15,13 +15,12 @@ export default class FilterPresenter {
     this.#tripEventsModel = tripEventsModel;
     this.#filterModel = filterModel;
 
-
     this.#filterModel.addObserver(this.#handleModelEvent);
     this.#tripEventsModel.addObserver(this.#handleModelEvent);
   }
 
   get filters() {
-    const tripEvents = this.#tripEventsModel.tripEvents;
+    const tripEvents = this.#tripEventsModel.events;
 
     return Object.values(Filters).map((type) => ({
       type,

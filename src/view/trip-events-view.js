@@ -1,28 +1,47 @@
+import dayjs from 'dayjs';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+import { DateFormats } from '../const.js';
 
-const generateOfferHTML = (offers) => offers.map((offer) => {
-  if (!offer.isChecked) {
-    return '';
-  }
-
-  return `
+/**
+ * @param {Array<import('../model/trip-event-model.js').TripOffer>} offers
+ * @returns {string}
+ */
+const generateOfferHTML = (offers) => offers.map((offer) => `
   <li class="event__offer">
     <span class="event__offer-title">${offer.title}</span>
     &plus;&euro;&nbsp;
     <span class="event__offer-price">${offer.price}</span>
-  </li>`;
-}).join('');
+  </li>`).join('');
 
+/**
+ * @param {{
+ *  type: string,
+ *  dateFrom: string,
+ *  dateTo: string,
+ *  eventDate: string,
+ *  offers: Array<import('../model/trip-event-model.js').TripOffer>,
+ *  basePrice: number,
+ *  isFavorite: boolean,
+ *  eventDuration: string,
+ *  destination: string,
+ * }} param
+ * @returns {string}
+ */
 const createTripEventsView = ({
   type,
+  dateFrom,
+  dateTo,
   eventDate,
-  destination,
   offers,
-  eventSchedule: {dateFrom, dateTo, eventDuration},
   basePrice,
-  isFavorite
+  isFavorite,
+  destination,
+  eventDuration,
+  tripEvent
 }) => {
   const favoriteClassName = isFavorite ? 'event__favorite-btn--active' : '';
+  const { name } = destination.find((destinationName) => destinationName.id === tripEvent.destination);
+
   return `<ul class="trip-events__list">
     <li class="trip-events__item">
       <div class="event">
@@ -31,7 +50,7 @@ const createTripEventsView = ({
           <img class="event__type-icon" width="42" height="42" src="img/icons/${type.toLowerCase()}.png" alt="Event type icon">
         </div>
 
-        <h3 class="event__title">${type} ${destination.name}</h3>
+        <h3 class="event__title">${type} ${name}</h3>
 
         <div class="event__schedule">
           <p class="event__time">
@@ -68,43 +87,118 @@ const createTripEventsView = ({
 };
 
 export default class TripEventsView extends AbstractStatefulView {
+  /** @type {?HTMLElement} */
   #eventRollupBtnElement = null;
+  /** @type {?HTMLElement} */
   #eventFavoritBtnElement = null;
+  /** @type {?Function} */
   #clickFavoritBtn = null;
+  /** @type {?Function} */
   #clickOpenHandler = null;
+  /**
+   * @type {?State}
+   **/
+  #initialState = null;
 
-  constructor({ tripEvent, onOpenEdit, onFavoritClick }) {
+  /**
+   *
+   * @param {{
+   *  tripEvent: import('../model/trip-event-model.js').TripEvent,
+   *  onOpenEdit: Function,
+   *  onFavoritClick: Function
+   * }} param
+   */
+  constructor({ tripEvent, onOpenEdit, onFavoritClick, destinations }) {
     super();
-    this._setState(tripEvent);
     this.#clickOpenHandler = onOpenEdit;
     this.#clickFavoritBtn = onFavoritClick;
+
+    this.#initialState = {
+      tripEvent: tripEvent,
+      destination: destinations
+    };
+
+    this.setState(this.#initialState);
 
     this._restoreHandlers();
   }
 
   get template() {
-    return createTripEventsView(this._state);
+    /** @type {import('../model/trip-event-model.js').TripEvent} */
+    const tripEvent = this.state;
+
+    return createTripEventsView({
+      tripEvent: tripEvent.tripEvent,
+      type: tripEvent.tripEvent.type,
+      dateFrom: dayjs(tripEvent.tripEvent.dateFrom).format(DateFormats.TIME),
+      dateTo: dayjs(tripEvent.tripEvent.dateTo).format(DateFormats.TIME),
+      eventDate: dayjs(tripEvent.tripEvent.dateFrom).format(DateFormats.DATE_MONTH),
+      offers: tripEvent.tripEvent.offers,
+      basePrice: tripEvent.tripEvent.basePrice,
+      isFavorite: tripEvent.tripEvent.isFavorite,
+      destination: tripEvent.destination,
+      eventDuration: `${dayjs(tripEvent.dateTo).diff(tripEvent.dateFrom, 'hour') }H`,
+    });
   }
 
   reset(tripEvent) {
-    this.updateElement(tripEvent);
+    this.updateState({
+      tripEvent,
+      ...this.#initialState});
+
+  }
+
+  /** @returns {Partial<State>} */
+  get state() {
+    return this._state;
+  }
+
+  /**
+     * @param {Partial<State>} update
+     */
+  setState(update) {
+    this._setState(update);
+  }
+
+  /**
+     * @param {Partial<State>} update
+     */
+  updateState(update) {
+    this.updateElement(update);
   }
 
   _restoreHandlers() {
-    this.#eventRollupBtnElement = this.element.querySelector('.event__rollup-btn');
-    this.#eventFavoritBtnElement = this.element.querySelector('.event__favorite-btn');
+    this.#eventRollupBtnElement =
+      this.element.querySelector('.event__rollup-btn');
+    this.#eventFavoritBtnElement = this.element.querySelector(
+      '.event__favorite-btn'
+    );
 
-    this.#eventRollupBtnElement.addEventListener('click', this.#onOpenClickHandler);
-    this.#eventFavoritBtnElement.addEventListener('click', this.#onFavoritClickHandler);
+    if (!this.#eventRollupBtnElement || !this.#eventFavoritBtnElement) {
+      throw new Error('Can\'t find necessary elements');
+    }
+
+    this.#eventRollupBtnElement.addEventListener(
+      'click',
+      this.#onOpenClickHandler
+    );
+    this.#eventFavoritBtnElement.addEventListener(
+      'click',
+      this.#onFavoritClickHandler
+    );
   }
 
   #onOpenClickHandler = (evt) => {
     evt.preventDefault();
-    this.#clickOpenHandler();
+    if (this.#clickOpenHandler) {
+      this.#clickOpenHandler();
+    }
   };
 
   #onFavoritClickHandler = (evt) => {
     evt.preventDefault();
-    this.#clickFavoritBtn();
+    if (this.#clickFavoritBtn) {
+      this.#clickFavoritBtn();
+    }
   };
 }

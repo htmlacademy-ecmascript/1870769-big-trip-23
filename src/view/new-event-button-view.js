@@ -5,21 +5,31 @@ function createTripInfoTemplate() {
 }
 
 export default class NewEventButtonView extends AbstractView {
+  /** @type {?Function} */
   #handleClick = null;
 
-  constructor ({ onClick }) {
+  /**
+   * @param {{ onClick: Function }} params
+   */
+  constructor({ onClick }) {
     super();
-    this.#handleClick = onClick;
 
-    this.element.addEventListener('click', this.#clickHandler);
+    this.#handleClick = onClick;
+    this.element.addEventListener("click", this.#clickHandler);
   }
 
   get template() {
     return createTripInfoTemplate();
   }
 
-  #clickHandler = (evt) => {
-    evt.preventDefault();
-    this.#handleClick();
+  /**
+   * @param {MouseEvent} event
+   */
+  #clickHandler = (event) => {
+    event.preventDefault();
+
+    if (this.#handleClick) {
+      this.#handleClick();
+    }
   };
 }
