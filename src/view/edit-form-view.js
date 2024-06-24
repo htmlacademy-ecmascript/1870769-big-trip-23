@@ -467,6 +467,7 @@ export default class EditFormView extends AbstractStatefulView {
 
     if (!isNaN(newBasePrice)) {
       this.updateState({
+        // @ts-ignore
         tripEvent: {
           ...this.state.tripEvent,
           basePrice: newBasePrice,
