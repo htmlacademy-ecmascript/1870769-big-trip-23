@@ -20,6 +20,8 @@ const TimeLimit = {
 
 export default class MainPresenter {
   #tripEventsPresentersMap = new Map();
+
+  /** @type {?NewTripEventPresenter} */
   #newTripEventPresenter = null;
 
   #currentSortType = SortTypes.DAY;
@@ -31,8 +33,14 @@ export default class MainPresenter {
 
   /** @type {?import('../model/trip-event-model.js').default} */
   #tripEventsModel = null;
+
+  /** @type {?import('../model/filter-model.js').default} */
   #filterModel = null;
+
+  /** @type {?HTMLElement} */
   #tripEventsElement = null;
+
+  /** @type {?HTMLElement} */
   #tripEventsListElement = null;
 
   #isLoading = true;
@@ -49,7 +57,7 @@ export default class MainPresenter {
 
     this.#tripEventsListElement = document.createElement('ul');
     this.#tripEventsListElement.classList.add('trip-events__list');
-    this.#tripEventsElement.appendChild(this.#tripEventsListElement);
+    this.#tripEventsElement?.appendChild(this.#tripEventsListElement);
 
     this.#tripEventsModel = tripEventsModel;
     this.#filterModel = filterModel;
@@ -60,12 +68,17 @@ export default class MainPresenter {
       onDestroy: onNewTaskDestroy
     });
 
-    this.#cities = this.#tripEventsModel.allCities;
-    this.#offers = this.#tripEventsModel.offers;
-    this.#destinations = this.#tripEventsModel.destinations;
+    if (this.#tripEventsModel) {
+      this.#cities = this.#tripEventsModel.allCities;
+      this.#offers = this.#tripEventsModel.offers;
+      this.#destinations = this.#tripEventsModel.destinations;
 
-    this.#tripEventsModel.addObserver(this.#handleModelEvent);
-    this.#filterModel.addObserver(this.#handleModelEvent);
+      this.#tripEventsModel.addObserver(this.#handleModelEvent);
+    }
+
+    if (this.#filterModel) {
+      this.#filterModel.addObserver(this.#handleModelEvent);
+    }
   }
 
   get tripEvents() {
@@ -73,7 +86,10 @@ export default class MainPresenter {
       throw new Error('Model is not defined');
     }
 
-    this.#filterType = this.#filterModel.filters;
+    if (this.#filterModel) {
+      this.#filterType = this.#filterModel.filters;
+    }
+
     const tripEvents = this.#tripEventsModel.events.toSorted(sortingEventsByDate);
     const filteredTripEvents = filter[this.#filterType](tripEvents);
 
@@ -144,12 +160,19 @@ export default class MainPresenter {
       onDataChange: this.#handleViewAction
     });
 
-    tripEventPresenter.init(tripEvent, this.#cities, this.#tripEventsModel.offers, this.#tripEventsModel.destinations);
+    tripEventPresenter.init(tripEvent, this.#tripEventsModel?.allCities, this.#tripEventsModel?.offers, this.#tripEventsModel?.destinations);
     this.#tripEventsPresentersMap.set(tripEvent.id, tripEventPresenter);
   }
 
   #renderNoTripEventsView() {
+    if(!this.#filterModel) {
+      return;
+    }
     const filters = this.#filterModel.filters || [];
+
+    if(!this.#noTripEventsView) {
+      return;
+    }
     this.#noTripEventsView = new NoTripEventsView({ filters });
 
     render(this.#noTripEventsView, this.#tripEventsElement, RenderPosition.BEFOREEND);
@@ -170,8 +193,22 @@ export default class MainPresenter {
     this.#handleModelEvent(UpdateType.MINOR);
   };
 
+  /**
+   *
+   * @param {string} actionType
+   * @param {*} updateType
+   * @param {import('../model/trip-event-model.js').TripEvent} update
+   */
   #handleViewAction = async (actionType, updateType, update) => {
     this.#uiBlocker.block();
+    if (!this.#tripEventsModel) {
+      throw new Error('Model is not defined');
+    }
+
+    if (!this.#newTripEventPresenter) {
+      throw new Error('New task presenter is not defined');
+    }
+
     switch(actionType) {
       case UserAction.UPDATE_EVENT:
         this.#tripEventsPresentersMap.get(update.id).setSaving();

@@ -22,7 +22,7 @@ export default class TripEventsPresenter {
 
   /** @type {?Function} */
   #onViewChange = null;
-  /** @type {?Function} */
+  /** @type {?(type: string, action: string, tripEvent: import('../model/trip-event-model.js').TripEvent) => void} */
   #handleDataChange = null;
   /** @type {?Function} */
   #escKeydownHandler = null;
@@ -35,12 +35,12 @@ export default class TripEventsPresenter {
     this.#handleDataChange = onDataChange;
   }
 
-  init(tripEvent, cities, offers, destinations) {
+  init(tripEvent, allCities, offers, destinations) {
     const prevTripEventView = this.#tripEventView;
     const prevTripEditFormView = this.#tripEditFormView;
 
     this.#tripEvent = tripEvent;
-    this.#allCitiesDestinations = cities;
+    this.#allCitiesDestinations = allCities;
     this.#offers = offers;
     this.#destinations = destinations;
 
@@ -94,8 +94,12 @@ export default class TripEventsPresenter {
     if (!this.#tripEditFormView) {
       return;
     }
+    if (!this.#tripEvent) {
+      return;
+    }
+
     if (this.#openedTripEvent.length > 0) {
-      this.#tripEditFormView.reset(this.#tripEvent);
+      this.#tripEditFormView.reset();
       this.#switchToViewForm();
     }
   }
@@ -206,10 +210,7 @@ export default class TripEventsPresenter {
       return;
     }
     const isMinorUpdate =
-      !isDatesEqual(
-        this.#tripEvent.dateFrom,
-        update.dateFrom
-      ) ||
+      !isDatesEqual(this.#tripEvent.dateFrom, update.dateFrom) ||
       isTripEventHaveOffers(this.#tripEvent.offers) !==
         isTripEventHaveOffers(update.offers);
 
@@ -222,6 +223,7 @@ export default class TripEventsPresenter {
       update
     );
 
+    this.#tripEvent = update;
     this.#switchToViewForm();
   };
 
@@ -229,16 +231,8 @@ export default class TripEventsPresenter {
     if (!this.#tripEditFormView) {
       return;
     }
-    this.#tripEditFormView.reset({
-      tripEvent: this.#tripEvent,
-      cities: this.#allCitiesDestinations,
-      offers:
-        this.#offers.find(({ type }) => type === this.#tripEvent?.type).offers ||
-        [],
-      allOffers: this.#offers,
-      destinations: this.#destinations,
-    });
 
+    this.#tripEditFormView.reset();
     this.#switchToViewForm();
   }
 
@@ -246,18 +240,10 @@ export default class TripEventsPresenter {
     if (!this.#tripEditFormView) {
       return;
     }
+
     if (evt.key === 'Escape') {
       evt.preventDefault();
-      this.#tripEditFormView.reset({
-        tripEvent: this.#tripEvent,
-        cities: this.#allCitiesDestinations,
-        offers:
-          this.#offers.find(({ type }) => type === this.#tripEvent?.type)
-            .offers || [],
-        allOffers: this.#offers,
-        destinations: this.#destinations,
-      });
-
+      this.#tripEditFormView.reset();
       this.#switchToViewForm();
     }
   }
@@ -274,14 +260,16 @@ export default class TripEventsPresenter {
     this.#switchToViewForm();
   }
 
-  #handleFavoriteClick() {
+  /**
+   * @param {import('../model/trip-event-model.js').TripEvent} value
+   * @returns {void}
+   */
+  #handleFavoriteClick(value) {
     if (!this.#handleDataChange) {
       return;
     }
-    this.#handleDataChange(UserAction.UPDATE_EVENT, UpdateType.MINOR, {
-      ...this.#tripEvent,
-      isFavorite: this.#tripEvent?.isFavorite === undefined ? true : !this.#tripEvent.isFavorite,
-    });
+
+    this.#handleDataChange(UserAction.UPDATE_EVENT, UpdateType.MINOR, value);
     this.#switchToViewForm();
   }
 }

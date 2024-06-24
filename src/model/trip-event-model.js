@@ -81,7 +81,7 @@ export default class TripEventModel extends Observable {
         'date_to': update.dateTo.toISOString(),
         'base_price': update.basePrice,
         'is_favorite': update.isFavorite,
-        offers: update.offers.map((offer) => offer.id),
+        offers: update.offers.filter((offer) => offer.isChecked).map((offer) => offer.id),
       });
 
       const updatedEventsElement = this.#adaptToClient(response);
@@ -152,7 +152,7 @@ export default class TripEventModel extends Observable {
   }
 
   get allCities() {
-    return this.#destinations.map((destination) => destination.name);
+    return this.destinations.map((destination) => destination.name);
   }
 
   /**

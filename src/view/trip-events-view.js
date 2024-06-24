@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { DateFormats } from '../const.js';
+import { calculateEventDuration } from '../utils.js';
 
 /**
  * @param {Array<import('../model/trip-event-model.js').TripOffer>} offers
@@ -23,7 +24,7 @@ const generateOfferHTML = (offers) => offers.map((offer) => `
  *  basePrice: number,
  *  isFavorite: boolean,
  *  eventDuration: string,
- *  destination: string,
+ *  destination?: import('./edit-form-view.js').Destination,
  * }} param
  * @returns {string}
  */
@@ -37,10 +38,9 @@ const createTripEventsView = ({
   isFavorite,
   destination,
   eventDuration,
-  tripEvent
 }) => {
   const favoriteClassName = isFavorite ? 'event__favorite-btn--active' : '';
-  const { name } = destination.find((destinationName) => destinationName.id === tripEvent.destination);
+  const name = destination?.name;
 
   return `<ul class="trip-events__list">
     <li class="trip-events__item">
@@ -91,12 +91,12 @@ export default class TripEventsView extends AbstractStatefulView {
   #eventRollupBtnElement = null;
   /** @type {?HTMLElement} */
   #eventFavoritBtnElement = null;
-  /** @type {?Function} */
+  /** @type {?(tripEvent: import('../model/trip-event-model.js').TripEvent) => void} */
   #clickFavoritBtn = null;
   /** @type {?Function} */
   #clickOpenHandler = null;
   /**
-   * @type {?State}
+   * @type {?Partial<State>}
    **/
   #initialState = null;
 
@@ -104,8 +104,9 @@ export default class TripEventsView extends AbstractStatefulView {
    *
    * @param {{
    *  tripEvent: import('../model/trip-event-model.js').TripEvent,
+   *  destinations: Array<import('./edit-form-view.js').Destination>,
    *  onOpenEdit: Function,
-   *  onFavoritClick: Function
+   *  onFavoritClick: (tripEvent: import('../model/trip-event-model.js').TripEvent) => void
    * }} param
    */
   constructor({ tripEvent, onOpenEdit, onFavoritClick, destinations }) {
@@ -115,7 +116,7 @@ export default class TripEventsView extends AbstractStatefulView {
 
     this.#initialState = {
       tripEvent: tripEvent,
-      destination: destinations
+      destinations: destinations,
     };
 
     this.setState(this.#initialState);
@@ -124,28 +125,32 @@ export default class TripEventsView extends AbstractStatefulView {
   }
 
   get template() {
-    /** @type {import('../model/trip-event-model.js').TripEvent} */
-    const tripEvent = this.state;
+    if (!this.state.tripEvent || !this.state.destinations) {
+      return '';
+    }
 
     return createTripEventsView({
-      tripEvent: tripEvent.tripEvent,
-      type: tripEvent.tripEvent.type,
-      dateFrom: dayjs(tripEvent.tripEvent.dateFrom).format(DateFormats.TIME),
-      dateTo: dayjs(tripEvent.tripEvent.dateTo).format(DateFormats.TIME),
-      eventDate: dayjs(tripEvent.tripEvent.dateFrom).format(DateFormats.DATE_MONTH),
-      offers: tripEvent.tripEvent.offers,
-      basePrice: tripEvent.tripEvent.basePrice,
-      isFavorite: tripEvent.tripEvent.isFavorite,
-      destination: tripEvent.destination,
-      eventDuration: `${dayjs(tripEvent.dateTo).diff(tripEvent.dateFrom, 'hour') }H`,
+      type: this.state.tripEvent.type,
+      dateFrom: dayjs(this.state.tripEvent.dateFrom).format(DateFormats.TIME),
+      dateTo: dayjs(this.state.tripEvent.dateTo).format(DateFormats.TIME),
+      eventDate: dayjs(this.state.tripEvent.dateFrom).format(
+        DateFormats.DATE_MONTH
+      ),
+      offers: this.state.tripEvent.offers,
+      basePrice: this.state.tripEvent.basePrice,
+      isFavorite: this.state.tripEvent.isFavorite,
+      destination: this.state.destinations.find(
+        ({ id }) => id === this.state.tripEvent?.destination
+      ),
+      eventDuration: `${calculateEventDuration(this.state.tripEvent.dateFrom, this.state.tripEvent.dateTo)}`,
     });
   }
 
   reset(tripEvent) {
     this.updateState({
       tripEvent,
-      ...this.#initialState});
-
+      ...this.#initialState,
+    });
   }
 
   /** @returns {Partial<State>} */
@@ -154,15 +159,15 @@ export default class TripEventsView extends AbstractStatefulView {
   }
 
   /**
-     * @param {Partial<State>} update
-     */
+   * @param {Partial<State>} update
+   */
   setState(update) {
     this._setState(update);
   }
 
   /**
-     * @param {Partial<State>} update
-     */
+   * @param {Partial<State>} update
+   */
   updateState(update) {
     this.updateElement(update);
   }
@@ -197,8 +202,30 @@ export default class TripEventsView extends AbstractStatefulView {
 
   #onFavoritClickHandler = (evt) => {
     evt.preventDefault();
+    if (!this.state.tripEvent) {
+      return;
+    }
+
     if (this.#clickFavoritBtn) {
-      this.#clickFavoritBtn();
+      this.#clickFavoritBtn({
+        basePrice: this.state.tripEvent.basePrice,
+        dateFrom: this.state.tripEvent.dateFrom,
+        dateTo: this.state.tripEvent.dateTo,
+        destination: this.state.tripEvent.destination,
+        id: this.state.tripEvent.id,
+        offers: this.state.tripEvent.offers,
+        type: this.state.tripEvent.type,
+        isFavorite: !this.state.tripEvent.isFavorite,
+      });
     }
   };
 }
+/**
+ * @typedef {{
+ *  tripEvent: import('../model/trip-event-model.js').TripEvent,
+ *  allOffers: Array<import('../model/trip-event-model.js').TripOfferTyped>,
+ *  allCities: Array<string>,
+ *  destinations: Array<import('./edit-form-view.js').Destination>,
+ *  currentDestination?: import('./edit-form-view.js').Destination
+ * }} State
+ */
