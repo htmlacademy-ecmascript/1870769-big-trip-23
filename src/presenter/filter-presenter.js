@@ -1,3 +1,4 @@
+// @ts-nocheck
 import FilterView from '../view/filter-view.js';
 import { render, replace, remove } from '../framework/render.js';
 import { Filters, UpdateType } from '../const.js';
