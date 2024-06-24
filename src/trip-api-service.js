@@ -12,15 +12,15 @@ export default class TripApiService extends ApiService {
    * @returns {Promise<Array<TripEvent>>}
    */
   get points() {
-    return this._load({ url: "points" }).then(ApiService.parseResponse);
+    return this._load({ url: 'points' }).then(ApiService.parseResponse);
   }
 
   get offers() {
-    return this._load({ url: "offers" }).then(ApiService.parseResponse);
+    return this._load({ url: 'offers' }).then(ApiService.parseResponse);
   }
 
   get destinations() {
-    return this._load({ url: "destinations" }).then(ApiService.parseResponse);
+    return this._load({ url: 'destinations' }).then(ApiService.parseResponse);
   }
 
   /**
@@ -31,8 +31,8 @@ export default class TripApiService extends ApiService {
     const response = await this._load({
       url: `points/${point.id}`,
       method: Method.PUT,
-      body: JSON.stringify(this.#adaptToServer(point)),
-      headers: new Headers({ "Content-Type": "application/json" }),
+      body: JSON.stringify(point),
+      headers: new Headers({ 'Content-Type': 'application/json' }),
     });
 
     const parsedResponse = await ApiService.parseResponse(response);
@@ -42,11 +42,11 @@ export default class TripApiService extends ApiService {
 
   async addPoint(point) {
     const response = await this._load({
-      url: "points",
+      url: 'points',
       method: Method.POST,
       body: JSON.stringify(this.#adaptToServer(point)),
       headers: new Headers({
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       }),
     });
 

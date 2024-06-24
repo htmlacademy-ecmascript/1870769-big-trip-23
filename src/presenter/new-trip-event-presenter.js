@@ -2,23 +2,53 @@ import { render, remove, RenderPosition } from '../framework/render.js';
 import EditFormView from '../view/edit-form-view.js';
 import { UpdateType, UserAction, DEFAULT_TRIP_EVENT } from '../const.js';
 
+/**
+ * @typedef {import('../model/trip-event-model.js').TripEvent} TripEvent
+ * @typedef {import('../model/trip-event-model.js').TripOfferTyped} TripOfferTyped
+ * @typedef {import('../model/trip-event-model.js').TripOffer} TripOffer
+ * @typedef {import('../view/edit-form-view.js').State} State
+ * @typedef {import('../view/edit-form-view.js').Destination} Destination
+ */
 export default class NewTripEventPresenter {
+  /** @type {?HTMLElement} */
   #eventContainer = null;
+
+  /** @type {?Function} */
   #handleDataChange = null;
+
+  /** @type {?Function} */
   #handleDestroy = null;
 
+  /** @type {?EditFormView} */
   #tripEditFormView = null;
+
+  /** @type {?import('../model/trip-event-model.js').TripEvent} */
   #tripEvent = null;
+
+  /** @type {string[]} */
   #allCitiesDestinations = [];
+  /** @type {TripOfferTyped[]} */
   #offers = [];
+  /** @type {Destination[]} */
   #destinations = [];
 
+  /**
+   * @param {{container: HTMLElement, onDataChange: Function, onDestroy: Function}} param
+   */
   constructor({container, onDataChange, onDestroy}) {
     this.#eventContainer = container;
     this.#handleDataChange = onDataChange;
     this.#handleDestroy = onDestroy;
   }
 
+  /**
+   * @param {{
+   *   tripEvents?: TripEvent,
+   *   allCities: string[],
+   *   offers: TripOfferTyped[],
+   *   destinations: Destination[]
+   * }} param
+   */
   init({ tripEvents = DEFAULT_TRIP_EVENT, allCities, offers, destinations }) {
     if (this.#tripEditFormView !== null) {
       return;
@@ -31,7 +61,7 @@ export default class NewTripEventPresenter {
     this.#tripEditFormView = new EditFormView({
       tripEvent: this.#tripEvent,
       cities: this.#allCitiesDestinations,
-      offers: this.#offers.find(({ type }) => type === this.#tripEvent.type)?.offers || [],
+      offers: this.#offers.find(({ type }) => type === this.#tripEvent?.type)?.offers || [],
       allOffers: this.#offers,
       destinations: this.#destinations,
       onSubmitEditForm: this.#handleFormSubmit,
@@ -80,6 +110,9 @@ export default class NewTripEventPresenter {
     this.#tripEditFormView.shake(resetFormState);
   }
 
+  /**
+   * @param {TripEvent} tripEvent
+   */
   #handleFormSubmit = (tripEvent) => {
     this.#handleDataChange(
       UserAction.ADD_EVENT,
@@ -88,6 +121,9 @@ export default class NewTripEventPresenter {
     );
   };
 
+  /**
+   * @param {KeyboardEvent} evt
+   */
   #escKeyDownHandler = (evt) => {
     if (evt.key === 'Escape' || evt.key === 'Esc') {
       evt.preventDefault();
